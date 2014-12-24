@@ -1,0 +1,226 @@
+#!/bin/bash
+##----------------
+##Name: pkictl
+##Description: A biased controller script to aid in common openssl management
+##             tasks
+##Date: 2014.12.24-12:57 
+##Version: 0.4.0-alpha
+##Requirements: openssl
+##----------------
+
+# Tunable settings
+export ORG=${ORG:-"bcnet"}     # Same as organizationName in openssl.cnf
+
+# Script settings
+export ROOT_DIR=${ROOT_DIR:-$PWD}
+
+##############################################################################
+## Setup
+##############################################################################
+
+init_folders() {
+    if [[ -d "$caPath" ]]; then
+        echo "Cannot init new CA with existing filename. Aborting."
+        exit 1
+    fi
+    mkdir -p "${caPath}/private" "${caPath}/db" "${caPath}/crl" "${caPath}/certs"
+    chmod 700 "${caPath}/private"
+}
+
+init_db() {
+    cp /dev/null "${caPath}/db/${caName}.db"
+    cp /dev/null "${caPath}/db/${caName}.db.attr"
+    echo 01 > "${caPath}/db/${caName}.crt.srl"
+    echo 01 > "${caPath}/db/${caName}.crl.srl"
+}
+
+##############################################################################
+## Openssl commands
+##############################################################################
+
+# gen_key() {
+    # declare keyDir="$1" keySize="$2"
+    # declare keyPath="${ROOT_DIR}/${keyDir}"
+    # openssl genrsa -des3 -out "$keyPath" "$keySize"
+# }
+
+gen_ca_request() {
+    openssl req -new \
+        -config "$conf" \
+        -out "${caPath}/${caName}.csr" \
+        -keyout "${caPath}/private/${caName}.key"
+}
+
+gen_root_ca_certificate() {
+    openssl ca -selfsign \
+        -config "$conf" \
+        -in "${caPath}/${caName}.csr" \
+        -out "${caPath}/${caName}.crt" \
+        -extensions root_ca_ext
+    if [[ "$?" -eq 0 ]]; then
+        rm "${caPath}/${caName}.csr"
+    fi
+}
+
+gen_sub_ca_certificate() {
+    openssl ca \
+        -config "$conf" \
+        -in "${caPath}/${caName}.csr" \
+        -out "${caPath}/${caName}.crt" \
+        -extensions intermediate_ca_ext
+    if [[ "$?" -eq 0 ]]; then
+        rm "${caPath}/${caName}.csr"
+    fi
+}
+
+gen_crl() {
+    openssl ca -gencrl \
+        -config "$conf" \
+        -out "${caPath}/crl/${caName}.crl"
+}
+
+gen_pem() {
+    cat "${subCert}" "${rootCert}" > \
+        "${caPath}/${ORG}-${caCertDepth}.chain.pem"
+
+}
+
+##############################################################################
+## CLI Commands
+##############################################################################
+
+rootca() {
+    declare caCertDepth="root"
+    declare caName="${ORG}-${caCertDepth}.ca"
+    declare caPath="${ROOT_DIR}/${caName}"
+    declare conf="${ROOT_DIR}/${caName}.cnf"
+
+    case "$1" in
+        init)
+            init_folders 
+            init_db 
+            ;;
+        request)
+            gen_ca_request 
+            ;;
+        create)
+            gen_root_ca_certificate 
+            ;;
+        gencrl)
+            gen_crl 
+            ;;
+        *)
+            display_usage_rootca
+            ;;
+    esac
+}
+
+subca() {
+    declare caCertDepth=${2:-"sub"}
+    declare caParentLabel=${3:-"root"}
+    declare caName="${ORG}-${caCertDepth}.root.ca"
+    declare caPath="${ROOT_DIR}/${caName}"
+    declare conf="${ROOT_DIR}/${caName}.cnf"
+
+    case "$1" in
+        init)
+            init_folders 
+            init_db 
+            ;;
+        request)
+            gen_ca_request 
+            ;;
+        create)
+            declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+            gen_sub_ca_certificate 
+            ;;
+        gencrl)
+            gen_crl 
+            ;;
+        genpem)
+            subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
+            rootCert="${caPath}/${ORG}-${caParentLabel}.ca.crt"
+            gen_pem
+            ;;
+        *)
+            display_usage_subca
+            ;;
+    esac
+}
+
+##############################################################################
+## Usage Info
+##############################################################################
+
+display_usage_main() {
+    echo "Usage: pkictl [subcommand] [action] [action args]"
+    echo ""
+    echo "pkictl is a biased pki management helper tool. It's designed to make"
+    echo "certificate and key creation and management tasks formal, easy to"
+    echo "initiate, and easy to automate. The complexities of the openssl"
+    echo "settings are to be asborbed by the various openssl.cnf files, saving"
+    echo "only initiation for the script itself."
+    echo ""
+    echo ""
+    echo -e "Subcommands:\tActions:"
+    echo -e "\trootca"
+    echo -e "\t\t{init|request|create|gencrl|help}"
+    echo -e "\tsubca"
+    echo -e "\t\t{init|request|create|revoke|help} [subca prefix name] [subca parent label]"
+    echo -e "\thelp"
+    exit 1
+}
+
+display_usage_rootca() {
+    echo "Usage: pkictl rootca [action]"
+    echo ""
+    echo "rootca"
+    echo -e "\tStuff."
+    echo "actions:"
+    echo -e "\tinit"
+    echo -e "\trequest"
+    echo -e "\tcreate"
+    echo -e "\tgencrl"
+    exit 1
+}
+
+display_usage_subca() {
+    echo "Usage: pkictl subca [action] [subca prefix name] [subca parent label]"
+    echo ""
+    echo "subca"
+    echo -e "\tsubca prefix name and subca parent lable must be supplied on"
+    echo -e "\tevery action usage."
+    echo "actions:"
+    echo -e "\tinit"
+    echo -e "\trequest"
+    echo -e "\tcreate"
+    echo -e "\trevoke"
+    echo -e "\trevoke"
+    exit 1
+}
+
+##############################################################################
+## Main
+##############################################################################
+
+main() {
+    set -eo pipefail
+    case "$1" in
+        rootca)
+            declare action="$2"
+            rootca "$action"
+            ;;
+        subca)
+            declare action="$2" subCaLabel="$3" subCaParentLabel=${4:-root}
+            subca "$action" "$subCaLabel" "$subCaParentLabel"
+            ;;
+        *)
+            display_usage_main
+            ;;
+    esac
+}
+
+##############################################################################
+## Runtime
+##############################################################################
+main "$@"
