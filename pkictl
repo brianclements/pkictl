@@ -103,7 +103,7 @@ rootca() {
         request)
             gen_ca_request 
             ;;
-        create)
+        sign)
             gen_root_ca_certificate 
             ;;
         gencrl)
@@ -130,7 +130,7 @@ subca() {
         request)
             gen_ca_request 
             ;;
-        create)
+        sign)
             declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
             gen_sub_ca_certificate 
             ;;
@@ -164,9 +164,9 @@ display_usage_main() {
     echo ""
     echo -e "Subcommands:\tActions:"
     echo -e "\trootca"
-    echo -e "\t\t{init|request|create|gencrl|help}"
+    echo -e "\t\t{init|request|sign|gencrl|help}"
     echo -e "\tsubca"
-    echo -e "\t\t{init|request|create|revoke|help} [subca prefix name] [subca parent label]"
+    echo -e "\t\t{init|request|sign|revoke|help} [subca prefix name] [subca parent label]"
     echo -e "\thelp"
     exit 1
 }
@@ -179,7 +179,7 @@ display_usage_rootca() {
     echo "actions:"
     echo -e "\tinit"
     echo -e "\trequest"
-    echo -e "\tcreate"
+    echo -e "\tsign"
     echo -e "\tgencrl"
     exit 1
 }
@@ -193,8 +193,7 @@ display_usage_subca() {
     echo "actions:"
     echo -e "\tinit"
     echo -e "\trequest"
-    echo -e "\tcreate"
-    echo -e "\trevoke"
+    echo -e "\tsign"
     echo -e "\trevoke"
     exit 1
 }
