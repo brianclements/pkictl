@@ -155,11 +155,11 @@ subca() {
 display_usage_main() {
     echo "Usage: pkictl [subcommand] [action] [action args]"
     echo ""
-    echo "pkictl is a biased pki management helper tool. It's designed to make"
-    echo "certificate and key creation and management tasks formal, easy to"
-    echo "initiate, and easy to automate. The complexities of the openssl"
-    echo "settings are to be asborbed by the various openssl.cnf files, saving"
-    echo "only initiation for the script itself."
+    echo "Pkictl is a biased Public Key Infrastructure (PKI) management helper"
+    echo "tool. It's designed to make certificate, key creation, and management"
+    echo "tasks formal, easy to initiate, and easy to automate. The complexities"
+    echo "of the openssl settings are to be absorbed by the various openssl.cnf"
+    echo "files, saving only execution of the tasks for the script itself."
     echo ""
     echo ""
     echo -e "Subcommands:\tActions:"
@@ -195,6 +195,7 @@ display_usage_subca() {
     echo -e "\trequest"
     echo -e "\tsign"
     echo -e "\trevoke"
+    echo -e "\tgencrl"
     exit 1
 }
 
