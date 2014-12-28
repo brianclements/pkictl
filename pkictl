@@ -131,7 +131,11 @@ subca() {
             gen_ca_request 
             ;;
         sign)
-            declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+            if [[ "$caParentLabel" == "root" ]]; then
+                declare conf="${ROOT_DIR}/${ORG}-root.ca.cnf"
+            else
+                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+            fi
             gen_sub_ca_certificate 
             ;;
         gencrl)
