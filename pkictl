@@ -9,7 +9,7 @@
 ##----------------
 
 # Tunable settings
-export ORG=${ORG:-"bcnet"}     # Same as organizationName in openssl.cnf
+export ORG=${ORG:-"myorg.local"}     # Same as organizationName in openssl.cnf
 
 # Script settings
 export ROOT_DIR=${ROOT_DIR:-$PWD}
