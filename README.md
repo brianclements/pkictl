@@ -94,8 +94,8 @@ that which is already setup via configuration files. To use:
             └── myorg.local-sub.root.ca
                 ├── myorg.local-tls.sub.root.ca
                 │   └── server.myorg.local-tls.crt
-                └── myorg.local-ocsp.sub.root.ca
-                    └── server.myorg.local-ocsp.crt
+                └── myorg.local-email.sub.root.ca
+                    └── server.myorg.local-email.crt
 
         Some Description:
 
@@ -105,10 +105,10 @@ that which is already setup via configuration files. To use:
                   grandchild of root
                     * `server.myorg.local-tls.crt`: A server certificate, child of
                       tls.sub.root.ca, great-grandchild of root
-                * `myorg.local-ocsp.sub.root.ca`: A signing CA, child of sub,
+                * `myorg.local-email.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-ocsp.crt`: A server certificate, child of
-                      ocsp.sub.root.ca, great-grandchild of root
+                    * `server.myorg.local-email.crt`: A server certificate, child of
+                      email.sub.root.ca, great-grandchild of root
 
         The list of configuration files would be:
 
@@ -116,7 +116,7 @@ that which is already setup via configuration files. To use:
             ├── myorg.local-root.ca.cnf 
             ├── myorg.local-sub.root.ca.cnf 
             ├── myorg.local-tls.sub.root.ca.cnf  
-            └── myorg.local-ocsp.sub.root.ca.cnf
+            └── myorg.local-email.sub.root.ca.cnf
             
 3. Tweak script or setup environment
     1. `$ORG`: This sets "myorg.local" in the example. Must be the same as
