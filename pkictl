@@ -158,7 +158,7 @@ subca() {
 ##############################################################################
 
 display_usage_main() {
-    echo "Usage: pkictl [subcommand] [action] [action args]"
+    echo "Usage: pkictl <subcommand> <action> <action args>"
     echo ""
     echo "Pkictl is a biased Public Key Infrastructure (PKI) management helper"
     echo "tool. It's designed to make certificate, key creation, and management"
@@ -169,15 +169,15 @@ display_usage_main() {
     echo ""
     echo -e "Subcommands:\tActions:"
     echo -e "\trootca"
-    echo -e "\t\t{init|request|sign|gencrl|help}"
+    echo -e "\t\t(init|request|sign|gencrl|help)"
     echo -e "\tsubca"
-    echo -e "\t\t{init|request|sign|revoke|help} [subca prefix name] [subca parent label]"
+    echo -e "\t\t(init|request|sign|gencrl|revoke|help) <subca prefix name> [<subca parent label>]"
     echo -e "\thelp"
     exit 1
 }
 
 display_usage_rootca() {
-    echo "Usage: pkictl rootca [action]"
+    echo "Usage: pkictl rootca <action>"
     echo ""
     echo "rootca"
     echo -e "\tStuff."
@@ -190,11 +190,11 @@ display_usage_rootca() {
 }
 
 display_usage_subca() {
-    echo "Usage: pkictl subca [action] [subca prefix name] [subca parent label]"
+    echo "Usage: pkictl subca <action> <subca prefix name> [<subca parent label>]"
     echo ""
     echo "subca"
-    echo -e "\tsubca prefix name and subca parent lable must be supplied on"
-    echo -e "\tevery action usage."
+    echo -e "\tsubca prefix name must be supplied on every action usage."
+    echo -e "\tsubca parent label is only needed on request, sign, and revoke."
     echo "actions:"
     echo -e "\tinit"
     echo -e "\trequest"
