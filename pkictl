@@ -49,6 +49,7 @@ gen_ca_request() {
         -config "$conf" \
         -out "${caPath}/${caName}.csr" \
         -keyout "${caPath}/private/${caName}.key"
+    chmod 700 "${caPath}/private/${caName}.key"
 }
 
 gen_root_ca_certificate() {
