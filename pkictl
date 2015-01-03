@@ -80,7 +80,7 @@ gen_crl() {
 }
 
 gen_pem() {
-    cat "${subCert}" "${rootCert}" > \
+    cat "${subCert}" "${parentCert}" > \
         "${caPath}/${ORG}-${caCertDepth}.chain.pem"
 
 }
@@ -142,8 +142,14 @@ subca() {
             gen_crl 
             ;;
         genpem)
-            subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
-            rootCert="${caPath}/${ORG}-${caParentLabel}.ca.crt"
+            if [[ "$caParentLabel" == "root" ]]; then
+                declare caName="${ORG}-root.ca"
+                declare parentCert="${ROOT_DIR}/${caName}/${caName}.crt"
+            else
+                declare caName="${ORG}-${caParentLabel}"
+                declare parentCert="${ROOT_DIR}/${caName}.root.ca/${caName}.chain.pem"
+            fi
+            declare subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
             gen_pem
             ;;
         *)
