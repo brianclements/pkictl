@@ -176,7 +176,7 @@ display_usage_main() {
     echo -e "\trootca"
     echo -e "\t\t(init|request|sign|gencrl|help)"
     echo -e "\tsubca"
-    echo -e "\t\t(init|request|sign|gencrl|revoke|help) <subca prefix name> [<subca parent label>]"
+    echo -e "\t\t(init|request|sign|gencrl|genpem|help) <subca prefix name> [<subca parent label>]"
     echo -e "\thelp"
     exit 1
 }
@@ -198,13 +198,13 @@ display_usage_subca() {
     echo "Usage: pkictl subca <action> <subca prefix name> [<subca parent label>]"
     echo ""
     echo "subca"
-    echo -e "\tsubca prefix name must be supplied on every action usage."
-    echo -e "\tsubca parent label is only needed on request, sign, and revoke."
+    echo -e "\t<subca prefix name> must be supplied on every action usage."
+    echo -e "\t<subca parent label> is only needed on \"sign\" and \"genpem\"."
     echo "actions:"
     echo -e "\tinit"
     echo -e "\trequest"
     echo -e "\tsign"
-    echo -e "\trevoke"
+    echo -e "\tgenpem"
     echo -e "\tgencrl"
     exit 1
 }
