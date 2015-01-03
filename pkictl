@@ -67,8 +67,7 @@ gen_sub_ca_certificate() {
     openssl ca \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
-        -out "${caPath}/${caName}.crt" \
-        -extensions intermediate_ca_ext
+        -out "${caPath}/${caName}.crt"
     if [[ "$?" -eq 0 ]]; then
         rm "${caPath}/${caName}.csr"
     fi
