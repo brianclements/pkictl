@@ -33,7 +33,7 @@ subjectKeyIdentifier    = hash
 # CA operational settings
 
 [ ca ]
-default_ca              = email_ca                # The default CA section
+default_ca              = email_ca                  # The default CA section
 
 [ email_ca ]
 certificate             = $dir/$ca/$ca.crt          # The CA cert
@@ -43,7 +43,7 @@ serial                  = $dir/$ca/db/$ca.crt.srl   # Serial number file
 crlnumber               = $dir/$ca/db/$ca.crl.srl   # CRL number file
 database                = $dir/$ca/db/$ca.db        # Index file
 unique_subject          = no                        # Require unique subject
-default_days            = 730                      # How long to certify for
+default_days            = 730                       # How long to certify for
 default_md              = sha256                    # MD to use
 policy                  = policy_match              # Default naming policy
 email_in_dn             = no                        # Add email to cert DN
@@ -51,7 +51,7 @@ preserve                = no                        # Keep passed DN ordering
 name_opt                = $name_opt                 # Subject DN display options
 cert_opt                = ca_default                # Certificate display options
 copy_extensions         = copy                      # Copy extensions from CSR
-x509_extensions         = email_ext                # Default cert extensions
+x509_extensions         = email_ext                 # Default cert extensions
 default_crl_days        = 1                         # How long before next CRL
 crl_extensions          = crl_ext                   # CRL extensions
 
