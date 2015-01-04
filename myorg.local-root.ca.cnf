@@ -82,7 +82,7 @@ authorityKeyIdentifier  = keyid:always
 
 [ intermediate_ca_ext ]
 keyUsage                = critical,keyCertSign,cRLSign
-basicConstraints        = critical,CA:true
+basicConstraints        = critical,CA:true,pathlen:1
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always
 authorityInfoAccess     = @issuer_info

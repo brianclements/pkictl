@@ -6,7 +6,6 @@ dir                     = .                         # Top dir
 base_url                = http://pki.myorg.local    # CA base URL
 aia_url                 = $base_url/$ca.cer         # CA certificate URL
 crl_url                 = $base_url/$ca.crl         # CRL distribution point
-ocsp_url                = http://ocsp.myorg.local   # OCSP responder URL
 name_opt                = multiline,-esc_msb,utf8   # Display UTF-8 characters
 
 [ req ]
@@ -81,7 +80,7 @@ basicConstraints        = CA:false
 extendedKeyUsage        = emailProtection,clientAuth,anyExtendedKeyUsage
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always
-authorityInfoAccess     = @ocsp_info
+authorityInfoAccess     = @issuer_info
 crlDistributionPoints   = @crl_info
 
 [ crl_ext ]

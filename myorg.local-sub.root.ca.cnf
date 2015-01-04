@@ -42,7 +42,7 @@ serial                  = $dir/$ca/db/$ca.crt.srl   # Serial number file
 crlnumber               = $dir/$ca/db/$ca.crl.srl   # CRL number file
 database                = $dir/$ca/db/$ca.db        # Index file
 unique_subject          = no                        # Require unique subject
-default_days            = 10950                     # How long to certify for
+default_days            = 3650                      # How long to certify for
 default_md              = sha256                    # MD to use
 policy                  = policy_match              # Default naming policy
 email_in_dn             = no                        # Add email to cert DN
@@ -50,7 +50,7 @@ preserve                = no                        # Keep passed DN ordering
 name_opt                = $name_opt                 # Subject DN display options
 cert_opt                = ca_default                # Certificate display options
 copy_extensions         = none                      # Copy extensions from CSR
-x509_extensions         = intermediate_ca_ext       # Default cert extensions
+x509_extensions         = signing_ca_ext            # Default cert extensions
 default_crl_days        = 1                         # How long before next CRL
 crl_extensions          = crl_ext                   # CRL extensions
 
@@ -74,7 +74,7 @@ domainComponent         = optional
 
 # Extensions
 
-[ intermediate_ca_ext ]
+[ signing_ca_ext ]
 keyUsage                = critical,keyCertSign,cRLSign
 basicConstraints        = critical,CA:true,pathlen:0
 subjectKeyIdentifier    = hash
