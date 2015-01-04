@@ -56,7 +56,7 @@ gen_root_ca_certificate() {
     openssl ca -selfsign \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
-        -out "${caPath}/certs/${caName}.crt" \
+        -out "${caPath}/${caName}.crt" \
         -extensions root_ca_ext
     if [[ "$?" -eq 0 ]]; then
         rm "${caPath}/${caName}.csr"
@@ -67,7 +67,7 @@ gen_sub_ca_certificate() {
     openssl ca \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
-        -out "${caPath}/certs/${caName}.crt"
+        -out "${caPath}/${caName}.crt"
     if [[ "$?" -eq 0 ]]; then
         rm "${caPath}/${caName}.csr"
     fi
@@ -143,12 +143,12 @@ subca() {
         genpem)
             if [[ "$caParentLabel" == "root" ]]; then
                 declare caName="${ORG}-root.ca"
-                declare parentCert="${ROOT_DIR}/${caName}/certs/${caName}.crt"
+                declare parentCert="${ROOT_DIR}/${caName}/${caName}.crt"
             else
                 declare caName="${ORG}-${caParentLabel}"
                 declare parentCert="${ROOT_DIR}/${caName}.root.ca/${caName}.chain.pem"
             fi
-            declare subCert="${caPath}/certs/${ORG}-${caCertDepth}.root.ca.crt"
+            declare subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
             gen_pem
             ;;
         *)
