@@ -1,2 +1,3 @@
 *.ca
 !*.ca.cnf
+!*.c.conf
