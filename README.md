@@ -20,6 +20,8 @@ worth it to read up on some of the literature yourself if you truly need a
 functional understanding of it and not rely on random scripts you find scattered
 around the internet (including this one!).
 
+**STATUS:** pkictl is v.0.4.0-alpha
+
 ## PKI Overview
 
 ### Components
@@ -56,19 +58,19 @@ This script makes assumptions about how you intend to build out your PKI. It
 assumes:
 
 1. 3-tier hierarchy
-    1. One root CA
-    2. At least one intermediate CA. Can be _n..._ parent/child
+    * One root CA
+    * At least one intermediate CA. Can be _n..._ parent/child
     CA's or _n..._ sibling intermediate CA's.
-    3. A final generation of _n..._ siblings of signing CA's.
+    * A final generation of _n..._ siblings of signing CA's.
 2. 1-to-1 certificate/configuration pairing
-    1. One configuration file per CA
-    2. One configuration file per CSR type.
+    * One configuration file per CA
+    * One configuration file per CSR type.
 
 Each generation inherits a copy of the chain from it's predecessors, so we have
 an opportunity to use/extend the line of certificates, using all the same CLI
 behavior and folder layout, indefinitely as needed keeping only the signing
 certificates we need on any particular machine and safely storing parent CA's we
-don't need.
+don't need elsewhere.
 
 ## Setup
 
@@ -83,19 +85,32 @@ that which is already setup via configuration files. To use:
 2. Modify the configuration files to match your design.
     1. Parity between the naming of the configuration files and all the openssl
        output must be preserved. This is how the script can sign certificates
-       across generations and amongst sibling certificates. The name scheme must
-       follow the following:
+       across generations and amongst sibling certificates. A strong naming
+       convention is desirable anyway to help keep track of all the keys, CSR's,
+       certificates etc. The name scheme for pkictl does the following:
 
-        `{domain/org name|FQDN}-[[CA subdomain/type labels].]{heirarchy root label}.{certificate type}[.[artifact suffix]]`
+        `<domain/org name>-[<CA subdomain labels>...].root.<certificate type>[.<artifact suffix>]`
 
-        An example tree could look like this:
+        where:
+        
+        * <domain/org name\>: name of internal network. "Myorg.local"
+        * <CA subdomain labels\>: subordinate levels below "root". This is "sub",
+          "tls.sub", "user.tls.sub", etc.
+        * <certificate type\>: "ca" for certificate authorities, "c" for user
+          certificates.
+        * <artifact suffix\>: determined by file type. ".csr", ".key", ".crt",
+          ".crl", ".cnf", ".conf", etc. Note that ".cnf" is used for CA
+          configuration files while ".conf" is used for user request
+          configuration files.
+
+        An example hierarchy of this naming convention could look like this:
 
             myorg.local-root.ca
             └── myorg.local-sub.root.ca
                 ├── myorg.local-tls.sub.root.ca
-                │   └── server.myorg.local-tls.crt
+                │   └── server.myorg.local-user.tls.sub.root.c
                 └── myorg.local-email.sub.root.ca
-                    └── server.myorg.local-email.crt
+                    └── myorg.local-user.email.sub.root.c
 
         Some Description:
 
@@ -103,20 +118,22 @@ that which is already setup via configuration files. To use:
             * `myorg.local-sub.root.ca`: An intermediate CA, child of root
                 * `myorg.local-tls.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-tls.crt`: A server certificate, child of
+                    * `server.myorg.local-user.tls.sub.root.c`: A user certificate, child of
                       tls.sub.root.ca, great-grandchild of root
                 * `myorg.local-email.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-email.crt`: A server certificate, child of
+                    * `server.myorg.local-user.email.sub.root.c`: A user certificate, child of
                       email.sub.root.ca, great-grandchild of root
 
         The list of configuration files would be:
 
             .
-            ├── myorg.local-root.ca.cnf 
-            ├── myorg.local-sub.root.ca.cnf 
-            ├── myorg.local-tls.sub.root.ca.cnf  
-            └── myorg.local-email.sub.root.ca.cnf
+            ├── myorg.local-root.ca.cnf
+            ├── myorg.local-sub.root.ca.cnf
+            ├── myorg.local-tls.sub.root.ca.cnf
+            ├── myorg.local-user.tls.sub.root.c.conf
+            ├── myorg.local-email.sub.root.ca.cnf
+            └── myorg.local-user.email.sub.root.c.conf
             
 3. Tweak script or setup environment
     1. `$ORG`: This sets "myorg.local" in the example. Must be the same as
@@ -127,6 +144,17 @@ that which is already setup via configuration files. To use:
 ## Usage
 
 TODO
+
+## TODO
+
+* Create tests for sample configuration by actually verifying sample certs
+  against chain.
+* Add revoke capability
+* Configuration
+    * Some configuration still prompts for subject info, should this be
+      pre-entered via config file?
+    * How to handle alternate extensions for same CA, additional configs? CLI
+      support for swapping extensions?
 
 ## Sources
 
