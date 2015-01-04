@@ -175,7 +175,7 @@ display_usage_main() {
     echo -e "\trootca"
     echo -e "\t\t(init|request|sign|gencrl|help)"
     echo -e "\tsubca"
-    echo -e "\t\t(init|request|sign|gencrl|genpem|help) <subca prefix name> [<subca parent label>]"
+    echo -e "\t\t(init|request|sign|gencrl|genpem|help) <new subca prefix label> [<signing CA label>]"
     echo -e "\thelp"
     exit 1
 }
@@ -183,28 +183,45 @@ display_usage_main() {
 display_usage_rootca() {
     echo "Usage: pkictl rootca <action>"
     echo ""
-    echo "rootca"
-    echo -e "\tStuff."
+    echo "rootca:"
+    echo "Create a root private key, CSR, and self sign to make a root CA"
+    echo ""
     echo "actions:"
     echo -e "\tinit"
+    echo -e "\t\tCreate folder structure."
     echo -e "\trequest"
+    echo -e "\t\tCreate private key and certificate request."
     echo -e "\tsign"
+    echo -e "\t\tSelf sign root CSR with root private key."
     echo -e "\tgencrl"
+    echo -e "\t\tGenerate initial CRL file."
     exit 1
 }
 
 display_usage_subca() {
-    echo "Usage: pkictl subca <action> <subca prefix name> [<subca parent label>]"
+    echo "Usage: pkictl subca <action> <new subca prefix label> [<signing CA label>]"
     echo ""
-    echo "subca"
-    echo -e "\t<subca prefix name> must be supplied on every action usage."
-    echo -e "\t<subca parent label> is only needed on \"sign\" and \"genpem\"."
+    echo "subca:"
+    echo "Create a subordinate private key, CSR, and CA named <new subca prefix label>"
+    echo "and sign it with senior CA named <signing CA label>."
+    echo ""
+    echo "<new subca prefix label> must be supplied on every action usage."
+    echo "<signing CA label> is only needed on \"sign\" and \"genpem\" subcommands."
+    echo ""
     echo "actions:"
     echo -e "\tinit"
+    echo -e "\t\tCreate folder structure."
     echo -e "\trequest"
+    echo -e "\t\tCreate private key and certificate request."
     echo -e "\tsign"
-    echo -e "\tgenpem"
+    echo -e "\t\tSign <new subca prefix label> CSR with private key from"
+    echo -e "\t\t<signing CA label> CA."
     echo -e "\tgencrl"
+    echo -e "\t\tGenerate initial CRL file."
+    echo -e "\tgenpem"
+    echo -e "\t\tConcatenate senior CA <signing CA label> certificate or"
+    echo -e "\t\tcertificate chain with newly generated <new subca prefix label>"
+    echo -e "\t\tcertificate."
     exit 1
 }
 
