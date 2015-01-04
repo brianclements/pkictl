@@ -145,17 +145,6 @@ that which is already setup via configuration files. To use:
 
 TODO
 
-## TODO
-
-* Create tests for sample configuration by actually verifying sample certs
-  against chain.
-* Add revoke capability
-* Configuration
-    * Some configuration still prompts for subject info, should this be
-      pre-entered via config file?
-    * How to handle alternate extensions for same CA, additional configs? CLI
-      support for swapping extensions?
-
 ## Sources
 
 * Official Sources
