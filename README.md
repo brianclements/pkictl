@@ -93,12 +93,12 @@ that which is already setup via configuration files. To use:
 
         where:
         
-        * <domain/org name\>: name of internal network. "Myorg.local"
-        * <CA subdomain labels\>: subordinate levels below "root". This is "sub",
+        * `<domain/org name>`: name of internal network. "Myorg.local"
+        * `<CA subdomain labels>`: subordinate levels below "root". This is "sub",
           "tls.sub", "user.tls.sub", etc.
-        * <certificate type\>: "ca" for certificate authorities, "c" for user
+        * `<certificate type>`: "ca" for certificate authorities, "c" for user
           certificates.
-        * <artifact suffix\>: determined by file type. ".csr", ".key", ".crt",
+        * `<artifact suffix>`: determined by file type. ".csr", ".key", ".crt",
           ".crl", ".cnf", ".conf", etc. Note that ".cnf" is used for CA
           configuration files while ".conf" is used for user request
           configuration files.
