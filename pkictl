@@ -78,6 +78,15 @@ gen_pem() {
         "${caPath}/${ORG}-${caCertDepth}.chain.pem"
 }
 
+gen_pkcs12() {
+    openssl pkcs12 -export \
+        -name "${caName}" \
+        -inkey "${caPath}/private/${caName}.key" \
+        -in "${caPath}/${caName}.crt" \
+        -certfile "${caPath}/${ORG}-${signingCaLabel}.chain.pem" \
+        -out "${caPath}/${caName}.p12"
+}
+
 ##############################################################################
 ## CLI Commands
 ##############################################################################
@@ -166,6 +175,10 @@ issuecert() {
             declare conf="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca.cnf"
             gen_certificate 
             ;;
+        genpkcs12)
+            declare caName="${ORG}-${userCsrLabel}.root.c"
+            gen_pkcs12
+            ;;
         *)
             display_usage_issuecert
             ;;
@@ -192,7 +205,7 @@ display_usage_main() {
     echo -e "\tsubca"
     echo -e "\t\t(init|request|sign|gencrl|genpem|help) <new subca prefix label> [<signing CA label>]"
     echo -e "\tissuecert"
-    echo -e "\t\t(request|sign|help) <request config label> <signing CA label>"
+    echo -e "\t\t(request|sign|genpkcs12|help) <request config label> <signing CA label>"
     echo -e "\thelp"
     exit 1
 }
@@ -246,8 +259,9 @@ display_usage_issuecert() {
     echo "Usage: pkictl issuecert <action> <request config label> <signing CA label>"
     echo ""
     echo "issuecert:"
-    echo "Create a user CSR, private key, and certificate named <request config label>"
-    echo "and sign with subordinate CA named <signing CA label>."
+    echo "Create a user CSR, private key, certificate, and PKCS#12 bundle named"
+    echo "<request config label> and sign with subordinate CA named <signing CA label>."
+    echo ""
     echo ""
     echo "actions:"
     echo -e "\trequest"
@@ -255,6 +269,9 @@ display_usage_issuecert() {
     echo -e "\tsign"
     echo -e "\t\tSign <request config label> CSR with private key from"
     echo -e "\t\t<signing CA label> CA."
+    echo -e "\tgenpkcs12"
+    echo -e "\t\tPackage user private key, signed certificate, and CA certificate"
+    echo -e "\t\tchain in a PKCS#12 bundle for export."
     exit 1
 }
 
