@@ -38,13 +38,7 @@ init_db() {
 ## Openssl commands
 ##############################################################################
 
-# gen_key() {
-    # declare keyDir="$1" keySize="$2"
-    # declare keyPath="${ROOT_DIR}/${keyDir}"
-    # openssl genrsa -des3 -out "$keyPath" "$keySize"
-# }
-
-gen_ca_request() {
+gen_request() {
     openssl req -new \
         -config "$conf" \
         -out "${caPath}/${caName}.csr" \
@@ -63,7 +57,7 @@ gen_root_ca_certificate() {
     fi
 }
 
-gen_sub_ca_certificate() {
+gen_certificate() {
     openssl ca \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
@@ -100,7 +94,7 @@ rootca() {
             init_db 
             ;;
         request)
-            gen_ca_request 
+            gen_request 
             ;;
         sign)
             gen_root_ca_certificate 
@@ -127,7 +121,7 @@ subca() {
             init_db 
             ;;
         request)
-            gen_ca_request 
+            gen_request 
             ;;
         sign)
             if [[ "$caParentLabel" == "root" ]]; then
@@ -135,7 +129,7 @@ subca() {
             else
                 declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
             fi
-            gen_sub_ca_certificate 
+            gen_certificate 
             ;;
         gencrl)
             gen_crl 
@@ -166,11 +160,11 @@ issuecert() {
     case "$1" in
         request)
             declare conf="${ROOT_DIR}/${ORG}-${userCsrLabel}.root.c.conf"
-            gen_ca_request 
+            gen_request 
             ;;
         sign)
             declare conf="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca.cnf"
-            gen_sub_ca_certificate 
+            gen_certificate 
             ;;
         *)
             display_usage_issuecert
