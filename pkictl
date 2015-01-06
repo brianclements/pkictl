@@ -87,6 +87,14 @@ gen_pkcs12() {
         -out "${caPath}/${caName}.p12"
 }
 
+revoke_cert() {
+    PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
+    openssl ca \
+        -config "$conf" \
+        -revoke "${caPath}/${caName}.crt" \
+        -crl_reason "$PKICTL_CRL_REASON"
+}
+
 ##############################################################################
 ## CLI Commands
 ##############################################################################
@@ -154,6 +162,22 @@ subca() {
             declare subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
             gen_pem
             ;;
+        revoke)
+            if [[ "$caParentLabel" == "root" ]]; then
+                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.ca.cnf"
+            else
+                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+            fi
+            revoke_cert
+            if [[ "$caParentLabel" == "root" ]]; then
+                declare caName="${ORG}-${caParentLabel}.ca"
+            else
+                declare caName="${ORG}-${caParentLabel}.root.ca"
+            fi
+            declare caPath="${ROOT_DIR}/${caName}"
+            echo "Regenerating CRL..."
+            gen_crl 
+            ;;
         *)
             display_usage_subca
             ;;
@@ -177,6 +201,15 @@ usercert() {
             ;;
         genpkcs12)
             gen_pkcs12
+            ;;
+        revoke)
+            declare conf="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca.cnf"
+            declare caName="${ORG}-${userCsrLabel}.root.c"
+            revoke_cert
+            declare caName="${ORG}-${caParentLabel}.root.ca"
+            declare caPath="${ROOT_DIR}/${caName}"
+            echo "Regenerating CRL..."
+            gen_crl 
             ;;
         *)
             display_usage_usercert
@@ -202,9 +235,9 @@ display_usage_main() {
     echo -e "\trootca"
     echo -e "\t\t(init|request|sign|gencrl|help)"
     echo -e "\tsubca"
-    echo -e "\t\t(init|request|sign|gencrl|genpem|help) <new subca prefix label> [<signing CA label>]"
+    echo -e "\t\t(init|request|sign|gencrl|genpem|revoke|help) <new subca prefix label> [<signing CA label>]"
     echo -e "\tusercert"
-    echo -e "\t\t(request|sign|genpkcs12|help) <request config label> <signing CA label>"
+    echo -e "\t\t(request|sign|genpkcs12|revoke|help) <request config label> <signing CA label>"
     echo -e "\thelp"
     exit 1
 }
@@ -251,6 +284,10 @@ display_usage_subca() {
     echo -e "\t\tConcatenate senior CA <signing CA label> certificate or"
     echo -e "\t\tcertificate chain with newly generated <new subca prefix label>"
     echo -e "\t\tcertificate."
+    echo -e "\trevoke"
+    echo -e "\t\tRevoke issued certificate <new subca prefix label> with CA"
+    echo -e "\t\t<signing CA label> and automatically generate new CRL for"
+    echo -e "\t\tCA <signing CA label>"
     exit 1
 }
 
@@ -260,7 +297,8 @@ display_usage_usercert() {
     echo "usercert:"
     echo "Create a user CSR, private key, certificate, and PKCS#12 bundle named"
     echo "<request config label> and sign with subordinate CA named <signing CA label>."
-    echo ""
+    echo "Optionally, revoke issued user certificate <request config label> with CA"
+    echo "named <signing CA label>."
     echo ""
     echo "actions:"
     echo -e "\trequest"
@@ -271,6 +309,10 @@ display_usage_usercert() {
     echo -e "\tgenpkcs12"
     echo -e "\t\tPackage user private key, signed certificate, and CA certificate"
     echo -e "\t\tchain in a PKCS#12 bundle for export."
+    echo -e "\trevoke"
+    echo -e "\t\tRevoke issued certificate <request config label> with CA"
+    echo -e "\t\t<signing CA label> and automatically generate new CRL for"
+    echo -e "\t\tCA <signing CA label>"
     exit 1
 }
 
