@@ -160,7 +160,7 @@ subca() {
     esac
 }
 
-issuecert() {
+usercert() {
     declare userCsrLabel=${2:-"sub.sub"}
     declare signingCaLabel=${3:-"sub"}
     declare caName="${ORG}-${userCsrLabel}.root.c"
@@ -180,7 +180,7 @@ issuecert() {
             gen_pkcs12
             ;;
         *)
-            display_usage_issuecert
+            display_usage_usercert
             ;;
     esac
 }
@@ -204,7 +204,7 @@ display_usage_main() {
     echo -e "\t\t(init|request|sign|gencrl|help)"
     echo -e "\tsubca"
     echo -e "\t\t(init|request|sign|gencrl|genpem|help) <new subca prefix label> [<signing CA label>]"
-    echo -e "\tissuecert"
+    echo -e "\tusercert"
     echo -e "\t\t(request|sign|genpkcs12|help) <request config label> <signing CA label>"
     echo -e "\thelp"
     exit 1
@@ -255,10 +255,10 @@ display_usage_subca() {
     exit 1
 }
 
-display_usage_issuecert() {
-    echo "Usage: pkictl issuecert <action> <request config label> <signing CA label>"
+display_usage_usercert() {
+    echo "Usage: pkictl usercert <action> <request config label> <signing CA label>"
     echo ""
-    echo "issuecert:"
+    echo "usercert:"
     echo "Create a user CSR, private key, certificate, and PKCS#12 bundle named"
     echo "<request config label> and sign with subordinate CA named <signing CA label>."
     echo ""
@@ -290,9 +290,9 @@ main() {
             declare action="$2" subCaLabel="$3" subCaParentLabel=${4:-root}
             subca "$action" "$subCaLabel" "$subCaParentLabel"
             ;;
-        issuecert)
+        usercert)
             declare action="$2" csrLabel="$3" caParentLabel=${4:-"sub"}
-            issuecert "$action" "$csrLabel" "$caParentLabel"
+            usercert "$action" "$csrLabel" "$caParentLabel"
             ;;
         *)
             display_usage_main
