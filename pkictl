@@ -176,7 +176,6 @@ usercert() {
             gen_certificate 
             ;;
         genpkcs12)
-            declare caName="${ORG}-${userCsrLabel}.root.c"
             gen_pkcs12
             ;;
         *)
