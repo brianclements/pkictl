@@ -9,10 +9,10 @@
 ##----------------
 
 # Tunable settings
-export ORG=${ORG:-"myorg.local"}     # Same as organizationName in openssl.cnf
+export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}     # Same as organizationName in openssl.cnf
 
 # Script settings
-export ROOT_DIR=${ROOT_DIR:-$PWD}
+export PKICTL_ROOT_DIR=${PKICTL_ROOT_DIR:-$PWD}
 
 ##############################################################################
 ## Setup
@@ -75,7 +75,7 @@ gen_crl() {
 
 gen_pem() {
     cat "${subCert}" "${parentCert}" > \
-        "${caPath}/${ORG}-${caCertDepth}.chain.pem"
+        "${caPath}/${PKICTL_ORG}-${caCertDepth}.chain.pem"
 }
 
 gen_pkcs12() {
@@ -83,7 +83,7 @@ gen_pkcs12() {
         -name "${caName}" \
         -inkey "${caPath}/private/${caName}.key" \
         -in "${caPath}/${caName}.crt" \
-        -certfile "${caPath}/${ORG}-${signingCaLabel}.chain.pem" \
+        -certfile "${caPath}/${PKICTL_ORG}-${signingCaLabel}.chain.pem" \
         -out "${caPath}/${caName}.p12"
 }
 
@@ -101,9 +101,9 @@ revoke_cert() {
 
 rootca() {
     declare caCertDepth="root"
-    declare caName="${ORG}-${caCertDepth}.ca"
-    declare caPath="${ROOT_DIR}/${caName}"
-    declare conf="${ROOT_DIR}/${caName}.cnf"
+    declare caName="${PKICTL_ORG}-${caCertDepth}.ca"
+    declare caPath="${PKICTL_ROOT_DIR}/${caName}"
+    declare conf="${PKICTL_ROOT_DIR}/${caName}.cnf"
 
     case "$1" in
         init)
@@ -128,9 +128,9 @@ rootca() {
 subca() {
     declare caCertDepth=${2:-"sub"}
     declare caParentLabel=${3:-"root"}
-    declare caName="${ORG}-${caCertDepth}.root.ca"
-    declare caPath="${ROOT_DIR}/${caName}"
-    declare conf="${ROOT_DIR}/${caName}.cnf"
+    declare caName="${PKICTL_ORG}-${caCertDepth}.root.ca"
+    declare caPath="${PKICTL_ROOT_DIR}/${caName}"
+    declare conf="${PKICTL_ROOT_DIR}/${caName}.cnf"
 
     case "$1" in
         init)
@@ -142,9 +142,9 @@ subca() {
             ;;
         sign)
             if [[ "$caParentLabel" == "root" ]]; then
-                declare conf="${ROOT_DIR}/${ORG}-root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-root.ca.cnf"
             else
-                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${caParentLabel}.root.ca.cnf"
             fi
             gen_certificate 
             ;;
@@ -153,28 +153,28 @@ subca() {
             ;;
         genpem)
             if [[ "$caParentLabel" == "root" ]]; then
-                declare caName="${ORG}-root.ca"
-                declare parentCert="${ROOT_DIR}/${caName}/${caName}.crt"
+                declare caName="${PKICTL_ORG}-root.ca"
+                declare parentCert="${PKICTL_ROOT_DIR}/${caName}/${caName}.crt"
             else
-                declare caName="${ORG}-${caParentLabel}"
-                declare parentCert="${ROOT_DIR}/${caName}.root.ca/${caName}.chain.pem"
+                declare caName="${PKICTL_ORG}-${caParentLabel}"
+                declare parentCert="${PKICTL_ROOT_DIR}/${caName}.root.ca/${caName}.chain.pem"
             fi
-            declare subCert="${caPath}/${ORG}-${caCertDepth}.root.ca.crt"
+            declare subCert="${caPath}/${PKICTL_ORG}-${caCertDepth}.root.ca.crt"
             gen_pem
             ;;
         revoke)
             if [[ "$caParentLabel" == "root" ]]; then
-                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${caParentLabel}.ca.cnf"
             else
-                declare conf="${ROOT_DIR}/${ORG}-${caParentLabel}.root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${caParentLabel}.root.ca.cnf"
             fi
             revoke_cert
             if [[ "$caParentLabel" == "root" ]]; then
-                declare caName="${ORG}-${caParentLabel}.ca"
+                declare caName="${PKICTL_ORG}-${caParentLabel}.ca"
             else
-                declare caName="${ORG}-${caParentLabel}.root.ca"
+                declare caName="${PKICTL_ORG}-${caParentLabel}.root.ca"
             fi
-            declare caPath="${ROOT_DIR}/${caName}"
+            declare caPath="${PKICTL_ROOT_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
             ;;
@@ -187,27 +187,27 @@ subca() {
 usercert() {
     declare userCsrLabel=${2:-"sub.sub"}
     declare signingCaLabel=${3:-"sub"}
-    declare caName="${ORG}-${userCsrLabel}.root.c"
-    declare caPath="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca"
+    declare caName="${PKICTL_ORG}-${userCsrLabel}.root.c"
+    declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$1" in
         request)
-            declare conf="${ROOT_DIR}/${ORG}-${userCsrLabel}.root.c.conf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${userCsrLabel}.root.c.conf"
             gen_request 
             ;;
         sign)
-            declare conf="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca.cnf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
             gen_certificate 
             ;;
         genpkcs12)
             gen_pkcs12
             ;;
         revoke)
-            declare conf="${ROOT_DIR}/${ORG}-${signingCaLabel}.root.ca.cnf"
-            declare caName="${ORG}-${userCsrLabel}.root.c"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+            declare caName="${PKICTL_ORG}-${userCsrLabel}.root.c"
             revoke_cert
-            declare caName="${ORG}-${caParentLabel}.root.ca"
-            declare caPath="${ROOT_DIR}/${caName}"
+            declare caName="${PKICTL_ORG}-${caParentLabel}.root.ca"
+            declare caPath="${PKICTL_ROOT_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
             ;;
