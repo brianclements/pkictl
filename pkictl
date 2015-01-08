@@ -47,21 +47,64 @@ gen_request() {
 }
 
 sign_root_ca_request() {
-    openssl ca -selfsign \
-        -config "$conf" \
-        -in "${caPath}/${caName}.csr" \
-        -out "${caPath}/${caName}.crt" \
-        -extensions root_ca_ext
+    if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
+        openssl ca -selfsign \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt"
+    elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
+        openssl ca -selfsign \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -extensions "$PKICTL_CA_EXTENSIONS"
+    elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
+        openssl ca -selfsign \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -policy "$PKICTL_CA_POLICY"
+    else
+        openssl ca -selfsign \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -policy "$PKICTL_CA_POLICY" \
+            -extensions "$PKICTL_CA_EXTENSIONS"
+    fi
+
     if [[ "$?" -eq 0 ]]; then
         rm "${caPath}/${caName}.csr"
     fi
 }
 
 sign_request() {
-    openssl ca \
-        -config "$conf" \
-        -in "${caPath}/${caName}.csr" \
-        -out "${caPath}/${caName}.crt"
+    if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
+        openssl ca \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt"
+    elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
+        openssl ca \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -extensions "$PKICTL_CA_EXTENSIONS"
+    elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
+        openssl ca \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -policy "$PKICTL_CA_POLICY"
+    else
+        openssl ca \
+            -config "$conf" \
+            -in "${caPath}/${caName}.csr" \
+            -out "${caPath}/${caName}.crt" \
+            -policy "$PKICTL_CA_POLICY" \
+            -extensions "$PKICTL_CA_EXTENSIONS"
+    fi
+
     if [[ "$?" -eq 0 ]]; then
         rm "${caPath}/${caName}.csr"
     fi
@@ -114,6 +157,8 @@ rootca() {
             gen_request 
             ;;
         sign)
+            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-"root_ca_ext"}
             sign_root_ca_request 
             ;;
         gencrl)
@@ -146,6 +191,8 @@ subca() {
             else
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${caParentLabel}.root.ca.cnf"
             fi
+            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
             ;;
         gencrl)
@@ -197,6 +244,8 @@ usercert() {
             ;;
         sign)
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
             ;;
         genpkcs12)
