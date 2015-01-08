@@ -46,7 +46,7 @@ gen_request() {
     chmod 700 "${caPath}/private/${caName}.key"
 }
 
-gen_root_ca_certificate() {
+sign_root_ca_request() {
     openssl ca -selfsign \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
@@ -57,7 +57,7 @@ gen_root_ca_certificate() {
     fi
 }
 
-gen_certificate() {
+sign_request() {
     openssl ca \
         -config "$conf" \
         -in "${caPath}/${caName}.csr" \
@@ -114,7 +114,7 @@ rootca() {
             gen_request 
             ;;
         sign)
-            gen_root_ca_certificate 
+            sign_root_ca_request 
             ;;
         gencrl)
             gen_crl 
@@ -146,7 +146,7 @@ subca() {
             else
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${caParentLabel}.root.ca.cnf"
             fi
-            gen_certificate 
+            sign_request 
             ;;
         gencrl)
             gen_crl 
@@ -197,7 +197,7 @@ usercert() {
             ;;
         sign)
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
-            gen_certificate 
+            sign_request 
             ;;
         genpkcs12)
             gen_pkcs12
