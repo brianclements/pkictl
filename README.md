@@ -20,7 +20,7 @@ worth it to read up on some of the literature yourself if you truly need a
 functional understanding of it and not rely on random scripts you find scattered
 around the internet (including this one!).
 
-**STATUS:** pkictl is v.0.5.0-alpha
+**STATUS:** pkictl is v.0.6.0-alpha
 
 ## PKI Overview
 

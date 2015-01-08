@@ -3,8 +3,8 @@
 ##Name: pkictl
 ##Description: A biased controller script to aid in common openssl management
 ##             tasks
-##Date: 2015.01.04-03:18 
-##Version: 0.5.0-alpha
+##Date: 2015.01.08-01:39 
+##Version: 0.6.0-alpha
 ##Requirements: openssl
 ##----------------
 
