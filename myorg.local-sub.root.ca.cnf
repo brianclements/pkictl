@@ -2,7 +2,7 @@
 
 [ default ]
 ca                      = myorg.local-sub.root.ca   # CA name
-dir                     = .                         # Top dir
+dir                     = $ENV::PKICTL_ROOT_DIR     # Top dir
 base_url                = http://pki.myorg.local    # CA base URL
 aia_url                 = $base_url/$ca.cer         # CA certificate URL
 crl_url                 = $base_url/$ca.crl         # CRL distribution point
