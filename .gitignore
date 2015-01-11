@@ -1,3 +1,6 @@
 *.ca
 !*.ca.cnf
 !*.c.conf
+tests/*
+!tests/pkictl_test
+!test/configs/*

@@ -1,0 +1,64 @@
+#!/bin/bash
+##----------------
+##Name: pkictl_test
+##Description: quick and simple testing to make sure new changes
+##             don't blow things up
+##Date: 2015.01.08-10:52 
+##Version: 0.6.0-alpha
+##Requirements: openssl pkictl
+##----------------
+
+export PKICTL_CMD=${PKICTL_CMD:-../pkictl}
+export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}
+
+setup() {
+    mkdir -p "$PKICTL_TEST_DIR"
+    cp configs/* "$PKICTL_TEST_DIR"
+}
+
+cleanup() {
+    rm -rf "$PKICTL_TEST_DIR"
+}
+
+test_rootca() {
+    "$PKICTL_CMD" rootca init
+    "$PKICTL_CMD" rootca request
+    "$PKICTL_CMD" rootca sign
+    "$PKICTL_CMD" rootca gencrl
+}
+
+test_subca() {
+    test_rootca
+
+    "$PKICTL_CMD" subca init sub
+    "$PKICTL_CMD" subca request sub
+    "$PKICTL_CMD" subca sign sub root
+    "$PKICTL_CMD" subca gencrl sub
+    "$PKICTL_CMD" subca genpem sub root
+    "$PKICTL_CMD" subca genpem sub root
+
+}
+
+main() {
+    set -eo pipefail
+    case "$1" in
+        rootca)
+            PKICTL_TEST_DIR="$PWD/rootca"
+            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            cleanup
+            setup
+            test_rootca
+            ;;
+        subca)
+            PKICTL_TEST_DIR="$PWD/subca"
+            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            cleanup
+            setup
+            test_subca
+            ;;
+        *)
+            ;;
+    esac
+}
+
+main "$@"
