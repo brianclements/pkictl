@@ -3,8 +3,6 @@
 ##Name: pkictl_test
 ##Description: quick and simple testing to make sure new changes
 ##             don't blow things up
-##Date: 2015.01.08-10:52 
-##Version: 0.6.0-alpha
 ##Requirements: openssl pkictl
 ##----------------
 
