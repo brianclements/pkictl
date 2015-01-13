@@ -21,6 +21,9 @@ cleanup() {
 }
 
 test_rootca() {
+    echo "#######################################"
+    echo "running rootca tests"
+    echo ""
     "$PKICTL_CMD" rootca init
     "$PKICTL_CMD" rootca request
     "$PKICTL_CMD" rootca sign
@@ -30,13 +33,54 @@ test_rootca() {
 test_subca() {
     test_rootca
 
+    echo "#######################################"
+    echo "running subca tests"
+    echo ""
+    echo "setting up sub CA..."
+    echo ""
     "$PKICTL_CMD" subca init sub
     "$PKICTL_CMD" subca request sub
     "$PKICTL_CMD" subca sign sub root
     "$PKICTL_CMD" subca gencrl sub
     "$PKICTL_CMD" subca genpem sub root
-    "$PKICTL_CMD" subca genpem sub root
 
+    echo ""
+    echo "setting up tls.sub signing CA..."
+    echo ""
+    "$PKICTL_CMD" subca init tls.sub
+    "$PKICTL_CMD" subca request tls.sub
+    "$PKICTL_CMD" subca sign tls.sub sub
+    "$PKICTL_CMD" subca gencrl tls.sub
+    "$PKICTL_CMD" subca genpem tls.sub sub
+
+    echo ""
+    echo "setting up email.sub signing CA..."
+    echo ""
+    "$PKICTL_CMD" subca init email.sub
+    "$PKICTL_CMD" subca request email.sub
+    "$PKICTL_CMD" subca sign email.sub sub
+    "$PKICTL_CMD" subca gencrl email.sub
+    "$PKICTL_CMD" subca genpem email.sub sub
+}
+
+test_usercert() {
+    test_subca
+
+    echo "#######################################"
+    echo "running usercert tests"
+    echo ""
+    echo "setting up user.tls.sub user certificate..."
+    echo ""
+    "$PKICTL_CMD" usercert request user.tls.sub tls.sub
+    "$PKICTL_CMD" usercert sign user.tls.sub tls.sub
+    "$PKICTL_CMD" usercert genpkcs12 user.tls.sub tls.sub
+
+    echo ""
+    echo "setting up user.mail.sub user certificate..."
+    echo ""
+    "$PKICTL_CMD" usercert request user.mail.sub mail.sub
+    "$PKICTL_CMD" usercert sign user.mail.sub mail.sub
+    "$PKICTL_CMD" usercert genpkcs12 user.mail.sub mail.sub
 }
 
 main() {
@@ -55,6 +99,13 @@ main() {
             cleanup
             setup
             test_subca
+            ;;
+        usercert)
+            PKICTL_TEST_DIR="$PWD/usercert"
+            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            cleanup
+            setup
+            test_usercert
             ;;
         *)
             ;;
