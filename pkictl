@@ -357,7 +357,7 @@ display_usage_subca() {
 }
 
 display_usage_usercert() {
-    echo "Usage: pkictl usercert <action> <request label> [<signing CA label>]"
+    echo "Usage: pkictl usercert <action> <request label> <signing CA label>"
     echo ""
     echo "Create a user CSR, private key, certificate, and PKCS#12 bundle named"
     echo "<request label> and sign with subordinate CA named <signing CA label>."
@@ -386,9 +386,10 @@ display_usage_usercert() {
     echo -e "\t\tSign <request label> CSR with private key from"
     echo -e "\t\t<signing CA label> CA."
     echo ""
-    echo -e "\tgenpkcs12 <request label>"
-    echo -e "\t\tPackage user private key, signed certificate, and CA certificate"
-    echo -e "\t\tchain in a PKCS#12 bundle for export."
+    echo -e "\tgenpkcs12 <request label> <signing CA label>"
+    echo -e "\t\tPackage user private key and signed certificate for <request label>"
+    echo -e "\t\twith CA certificate chain from <signing CA label> in a PKCS#12"
+    echo -e "\t\tbundle for export."
     echo ""
     echo -e "\trevoke <request label> <signing CA label>"
     echo -e "\t\tRevoke issued certificate <request label> with CA"
