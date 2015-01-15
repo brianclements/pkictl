@@ -271,130 +271,135 @@ usercert() {
 ##############################################################################
 
 display_usage_main() {
-    echo "Usage: pkictl <subcommand> <action> <action args>"
-    echo ""
-    echo "Pkictl is a biased Public Key Infrastructure (PKI) management helper"
-    echo "tool. It's designed to make certificate, key creation, and management"
-    echo "tasks formal, easy to initiate, and easy to automate. The complexities"
-    echo "of the openssl settings are to be absorbed by the various openssl.cnf"
-    echo "files, saving only execution of the tasks for the script itself."
-    echo ""
-    echo -e "Subcommands:\tActions:"
-    echo -e "\trootca"
-    echo -e "\t\t(init|request|sign|gencrl|help)"
-    echo ""
-    echo -e "\tsubca"
-    echo -e "\t\t(init|request|sign|gencrl|genpem|revoke|help) <subca label> [<signing CA label>]"
-    echo ""
-    echo -e "\tusercert"
-    echo -e "\t\t(request|sign|genpkcs12|revoke|help) <request label> <signing CA label>"
-    echo ""
-    echo -e "\thelp"
+    cat <<EOF
+Usage: pkictl <subcommand> <action> <action args>
+
+Pkictl is a biased Public Key Infrastructure (PKI) management helper tool.
+It's designed to make certificate, key creation, and management tasks formal,
+easy to initiate, and easy to automate. The complexities of the openssl
+settings are to be absorbed by the various openssl.cnf files, saving only
+execution of the tasks for the script itself.
+
+Subcommands:    Actions:
+    rootca
+                (init|request|sign|gencrl|help)
+
+    subca
+                (init|request|sign|gencrl|genpem|revoke|help) <subca label> [<signing CA label>]
+
+    usercert
+                (request|sign|genpkcs12|revoke|help) <request label> <signing CA label>
+
+    help
+EOF
     exit 1
 }
 
 display_usage_rootca() {
-    echo "Usage: pkictl rootca <action>"
-    echo ""
-    echo "Create a root private key, CSR, and self sign to make a root CA"
-    echo ""
-    echo "actions:"
-    echo -e "\tinit"
-    echo -e "\t\tCreate folder structure."
-    echo ""
-    echo -e "\trequest"
-    echo -e "\t\tCreate private key and certificate request."
-    echo ""
-    echo -e "\tsign"
-    echo -e "\t\tSelf sign root CSR with root private key."
-    echo ""
-    echo -e "\tgencrl"
-    echo -e "\t\tGenerate initial CRL file."
+    cat <<EOF
+Usage: pkictl rootca <action>
+
+Create a root private key, CSR, and self sign to make a root CA.
+
+actions:
+    init
+            Create folder structure.
+
+    request
+            Create private key and certificate request.
+
+    sign
+            Self sign root CSR with root private key.
+
+    gencrl
+            Generate initial CRL file.
+EOF
     exit 1
 }
 
 display_usage_subca() {
-    echo "Usage: pkictl subca <action> <subca label> [<signing CA label>]"
-    echo ""
-    echo "Create a subordinate private key, CSR, and CA named <subca label>"
-    echo "and sign it with senior CA named <signing CA label>."
-    echo ""
-    echo "Labeling Arguments:"
-    echo "<subca label> must be supplied on every action usage. It is made up of"
-    echo "the sub-levels from root and must coincide with the filename of its"
-    echo "configuration file. So if \$PKICTL_ORG was \"sample.org\", the root CA"
-    echo "is named \"sample.org-root.ca\". A subordinate CA below this one could"
-    echo "have the name \"sub\". It would be named \"sample.org-sub.root.ca\". In"
-    echo "these examples, the <subca label> is \"sub\" while the <signing CA label>"
-    echo "would be \"root\". A third level below that could be \"tls.sub\", its"
-    echo "name would be \"sample.org-tls.sub.root.ca\" and the <subca label> for"
-    echo "it would be \"tls.sub\"."
-    echo ""
-    echo "actions:"
-    echo -e "\tinit <subca label>"
-    echo -e "\t\tCreate folder structure."
-    echo ""
-    echo -e "\trequest <subca label>"
-    echo -e "\t\tCreate private key and certificate request."
-    echo ""
-    echo -e "\tsign <subca label> <signing CA label>"
-    echo -e "\t\tSign <subca label> CSR with private key from"
-    echo -e "\t\t<signing CA label> CA."
-    echo ""
-    echo -e "\tgencrl <subca label>"
-    echo -e "\t\tGenerate initial CRL file."
-    echo ""
-    echo -e "\tgenpem <subca label> <signing CA label>"
-    echo -e "\t\tConcatenate senior CA <signing CA label> certificate or"
-    echo -e "\t\tcertificate chain with newly generated <subca label>"
-    echo -e "\t\tcertificate."
-    echo ""
-    echo -e "\trevoke <subca label> <signing CA label>"
-    echo -e "\t\tRevoke issued certificate <subca label> with CA"
-    echo -e "\t\t<signing CA label> and automatically generate new CRL for"
-    echo -e "\t\tCA <signing CA label>"
+    cat <<EOF
+Usage: pkictl subca <action> <subca label> [<signing CA label>]
+
+Create a subordinate private key, CSR, and CA named <subca label> and sign it
+with senior CA named <signing CA label>.
+
+Labeling Arguments:
+<subca label> must be supplied on every action usage. It is made up of the
+sub-levels from root and must coincide with the filename of its configuration
+file. So if \$PKICTL_ORG was "sample.org", the root CA is named
+"sample.org-root.ca". A subordinate CA below this one could have the name
+"sub". It would be named "sample.org-sub.root.ca". In these examples, the
+<subca label> is "sub" while the <signing CA label> would be "root". A
+third level below that could be "tls.sub", its name would be
+"sample.org-tls.sub.root.ca" and the <subca label> for it would be
+"tls.sub".
+
+actions:
+    init <subca label>
+            Create folder structure.
+
+    request <subca label>
+            Create private key and certificate request.
+
+    sign <subca label> <signing CA label>
+            Sign <subca label> CSR with private key from <signing CA label> CA.
+
+    gencrl <subca label>
+            Generate initial CRL file.
+
+    genpem <subca label> <signing CA label>
+            Concatenate senior CA <signing CA label> certificate or certificate
+            chain with newly generated <subca label> certificate.
+
+    revoke <subca label> <signing CA label>
+            Revoke issued certificate <subca label> with CA <signing CA label>
+            and automatically generate new CRL for CA <signing CA label>
+EOF
     exit 1
 }
 
 display_usage_usercert() {
-    echo "Usage: pkictl usercert <action> <request label> <signing CA label>"
-    echo ""
-    echo "Create a user CSR, private key, certificate, and PKCS#12 bundle named"
-    echo "<request label> and sign with subordinate CA named <signing CA label>."
-    echo "Optionally, revoke issued user certificate <request label> with CA"
-    echo "named <signing CA label>."
-    echo ""
-    echo "Labeling Arguments:"
-    echo "<request label> must be supplied on every action usage. It is made up of"
-    echo "the sub-levels from root and must coincide with the filename of its"
-    echo "configuration file. So if \$PKICTL_ORG was \"sample.org\", the root CA"
-    echo "is named \"sample.org-root.ca\". A subordinate signing CA two levels below"
-    echo "could be \"tls.sub\", its name would be \"sample.org-tls.sub.root.ca\""
-    echo "and its label \"tls.sub\". A user request could be named \"user.tls.sub\"."
-    echo "Its full name would be \"sample.org-user.tls.sub.root.c\". Notice that for"
-    echo "user certificate requests, we change the suffix to \"c\" from \"ca\". This"
-    echo "is to label each as \"certificate\" or \"certificate authority\""
-    echo "respectively. To sign this configuration, we use \"user.tls.sub\" as our"
-    echo "<request label> and \"tls.sub\" as our <signing CA label>"
-    echo ""
-    echo "actions:"
-    echo -e "\trequest <request label> <signing CA label>"
-    echo -e "\t\tCreate private key and certificate request for <request label>."
-    echo -e "\t\tCSR can be found in folder for <signing CA label>."
-    echo ""
-    echo -e "\tsign <request label> <signing CA label>"
-    echo -e "\t\tSign <request label> CSR with private key from"
-    echo -e "\t\t<signing CA label> CA."
-    echo ""
-    echo -e "\tgenpkcs12 <request label> <signing CA label>"
-    echo -e "\t\tPackage user private key and signed certificate for <request label>"
-    echo -e "\t\twith CA certificate chain from <signing CA label> in a PKCS#12"
-    echo -e "\t\tbundle for export."
-    echo ""
-    echo -e "\trevoke <request label> <signing CA label>"
-    echo -e "\t\tRevoke issued certificate <request label> with CA"
-    echo -e "\t\t<signing CA label> and automatically generate new CRL for"
-    echo -e "\t\tCA <signing CA label>"
+    cat <<EOF
+Usage: pkictl usercert <action> <request label> <signing CA label>
+
+Create a user CSR, private key, certificate, and PKCS#12 bundle named
+<request label> and sign with subordinate CA named <signing CA label>.
+Optionally, revoke issued user certificate <request label> with CA
+named <signing CA label>.
+
+Labeling Arguments:
+<request label> must be supplied on every action usage. It is made up of
+the sub-levels from root and must coincide with the filename of its
+configuration file. So if \$PKICTL_ORG was "sample.org", the root CA
+is named "sample.org-root.ca". A subordinate signing CA two levels below
+could be "tls.sub", its name would be "sample.org-tls.sub.root.ca"
+and its label "tls.sub". A user request could be named "user.tls.sub".
+Its full name would be "sample.org-user.tls.sub.root.c". Notice that for
+user certificate requests, we change the suffix to "c" from "ca". This
+is to label each as "certificate" or "certificate authority"
+respectively. To sign this configuration, we use "user.tls.sub" as our
+<request label> and "tls.sub" as our <signing CA label>.
+
+actions:
+    request <request label> <signing CA label>
+            Create private key and certificate request for <request label>.
+            CSR can be found in folder for <signing CA label>.
+
+    sign <request label> <signing CA label>
+            Sign <request label> CSR with private key from <signing CA label>
+            CA.
+
+    genpkcs12 <request label> <signing CA label>
+            Package user private key and signed certificate for <request
+            label> with CA certificate chain from <signing CA label> in a
+            PKCS#12" bundle for export.
+
+    revoke <request label> <signing CA label>
+            Revoke issued certificate <request label> with CA <signing CA
+            label> and automatically generate new CRL for CA <signing CA
+            label>.
+EOF
     exit 1
 }
 
