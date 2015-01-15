@@ -135,11 +135,24 @@ that which is already setup via configuration files. To use:
             ├── myorg.local-email.sub.root.ca.cnf
             └── myorg.local-user.email.sub.root.c.conf
             
-3. Tweak script or setup environment
-    1. `$ORG`: This sets "myorg.local" in the example. Must be the same as
-       the "organizationName" value in the openssl configuration file.
-    2. `$ROOT_DIR`: defaults to `$PWD`, change to run everything in a different
-       location.
+3. Setup environment
+
+    Configuration via the CLI is kept to an absolute minimum so that
+    configuration files can store the configuration complexity, not your brain.
+    However, some configuration is welcomed for certain items to allow for
+    efficient use of configuration files.
+
+    1. `$PKICTL_ORG`: This sets "myorg.local" in the above examples. Must be the
+       same as the "organizationName" value in the openssl configuration file.
+    2. `$PKICTL_ROOT_DIR`: defaults to `$PWD`, change to run everything in a
+       different location.
+    3. `$PKICTL_CA_EXTENSIONS`: set this prior to signing commands to select
+       alternate certificate extensions to include from your configuration file.
+       When unset, defaults from your configuration file are used.
+    4. `$PKICTL_CA_POLICY`: set this prior to signing commands to select
+       alterate distinguished name matching policies for signing your
+       certificate. When unset, defaults from your configuration file are
+       used.
 
 ## Usage
 
