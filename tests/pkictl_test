@@ -76,9 +76,9 @@ test_usercert() {
     echo ""
     echo "setting up user.mail.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" usercert request user.mail.sub mail.sub
-    "$PKICTL_CMD" usercert sign user.mail.sub mail.sub
-    "$PKICTL_CMD" usercert genpkcs12 user.mail.sub mail.sub
+    "$PKICTL_CMD" usercert request user.email.sub email.sub
+    "$PKICTL_CMD" usercert sign user.email.sub email.sub
+    "$PKICTL_CMD" usercert genpkcs12 user.email.sub email.sub
 }
 
 main() {
