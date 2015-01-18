@@ -6,6 +6,7 @@ dir                     = $ENV::PKICTL_ROOT_DIR     # Top dir
 base_url                = http://pki.myorg.local    # CA base URL
 aia_url                 = $base_url/$ca.cer         # CA certificate URL
 crl_url                 = $base_url/$ca.crl         # CRL distribution point
+ocsp_url                = $base_url/ocsp            # OCSP service location
 name_opt                = multiline,-esc_msb,utf8   # Display UTF-8 characters
 
 [ req ]
@@ -89,6 +90,7 @@ authorityInfoAccess     = @issuer_info
 
 [ issuer_info ]
 caIssuers;URI.0         = $aia_url
+OCSP;URI.0              = $ocsp_url
 
 [ crl_info ]
 URI.0                   = $crl_url
