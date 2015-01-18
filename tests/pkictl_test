@@ -61,24 +61,24 @@ test_subca() {
     "$PKICTL_CMD" subca genpem email.sub sub
 }
 
-test_usercert() {
+test_eecert() {
     test_subca
 
     echo "#######################################"
-    echo "running usercert tests"
+    echo "running eecert tests"
     echo ""
     echo "setting up user.tls.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" usercert request user.tls.sub tls.sub
-    "$PKICTL_CMD" usercert sign user.tls.sub tls.sub
-    "$PKICTL_CMD" usercert genpkcs12 user.tls.sub tls.sub
+    "$PKICTL_CMD" eecert request user.tls.sub tls.sub
+    "$PKICTL_CMD" eecert sign user.tls.sub tls.sub
+    "$PKICTL_CMD" eecert genpkcs12 user.tls.sub tls.sub
 
     echo ""
     echo "setting up user.mail.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" usercert request user.email.sub email.sub
-    "$PKICTL_CMD" usercert sign user.email.sub email.sub
-    "$PKICTL_CMD" usercert genpkcs12 user.email.sub email.sub
+    "$PKICTL_CMD" eecert request user.email.sub email.sub
+    "$PKICTL_CMD" eecert sign user.email.sub email.sub
+    "$PKICTL_CMD" eecert genpkcs12 user.email.sub email.sub
 }
 
 main() {
@@ -98,12 +98,12 @@ main() {
             setup
             test_subca
             ;;
-        usercert)
-            PKICTL_TEST_DIR="$PWD/usercert"
+        eecert)
+            PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
             cleanup
             setup
-            test_usercert
+            test_eecert
             ;;
         *)
             ;;

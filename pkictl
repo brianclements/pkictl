@@ -231,15 +231,15 @@ subca() {
     esac
 }
 
-usercert() {
-    declare userCsrLabel=${2:-"sub.sub"}
+eecert() {
+    declare eeCsrLabel=${2:-"sub.sub"}
     declare signingCaLabel=${3:-"sub"}
-    declare caName="${PKICTL_ORG}-${userCsrLabel}.root.c"
+    declare caName="${PKICTL_ORG}-${eeCsrLabel}.root.c"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$1" in
         request)
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${userCsrLabel}.root.c.conf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${eeCsrLabel}.root.c.conf"
             gen_request 
             ;;
         sign)
@@ -253,7 +253,7 @@ usercert() {
             ;;
         revoke)
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
-            declare caName="${PKICTL_ORG}-${userCsrLabel}.root.c"
+            declare caName="${PKICTL_ORG}-${eeCsrLabel}.root.c"
             revoke_cert
             declare caName="${PKICTL_ORG}-${caParentLabel}.root.ca"
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
@@ -261,7 +261,7 @@ usercert() {
             gen_crl 
             ;;
         *)
-            display_usage_usercert
+            display_usage_eecert
             ;;
     esac
 }
@@ -287,7 +287,7 @@ Subcommands:    Actions:
     subca
                 (init|request|sign|gencrl|genpem|revoke|help) <subca label> [<signing CA label>]
 
-    usercert
+    eecert
                 (request|sign|genpkcs12|revoke|help) <request label> <signing CA label>
 
     help
@@ -359,27 +359,27 @@ EOF
     exit 1
 }
 
-display_usage_usercert() {
+display_usage_eecert() {
     cat <<EOF
-Usage: pkictl usercert <action> <request label> <signing CA label>
+Usage: pkictl eecert <action> <request label> <signing CA label>
 
-Create a user CSR, private key, certificate, and PKCS#12 bundle named
+Create an end entity CSR, private key, certificate, and PKCS#12 bundle named
 <request label> and sign with subordinate CA named <signing CA label>.
-Optionally, revoke issued user certificate <request label> with CA
-named <signing CA label>.
+Optionally, revoke issued end entity certificate <request label> with CA named
+<signing CA label>.
 
 Labeling Arguments:
-<request label> must be supplied on every action usage. It is made up of
-the sub-levels from root and must coincide with the filename of its
-configuration file. So if \$PKICTL_ORG was "sample.org", the root CA
-is named "sample.org-root.ca". A subordinate signing CA two levels below
-could be "tls.sub", its name would be "sample.org-tls.sub.root.ca"
-and its label "tls.sub". A user request could be named "user.tls.sub".
-Its full name would be "sample.org-user.tls.sub.root.c". Notice that for
-user certificate requests, we change the suffix to "c" from "ca". This
-is to label each as "certificate" or "certificate authority"
-respectively. To sign this configuration, we use "user.tls.sub" as our
-<request label> and "tls.sub" as our <signing CA label>.
+<request label> must be supplied on every action usage. It is made up of the
+sub-levels from root and must coincide with the filename of its configuration
+file. So if \$PKICTL_ORG was "sample.org", the root CA is named
+"sample.org-root.ca". A subordinate signing CA two levels below could be
+"tls.sub", its name would be "sample.org-tls.sub.root.ca" and its label
+"tls.sub". An end entity certificate request could be named "user.tls.sub".
+Its full name would be "sample.org-user.tls.sub.root.c". Notice that for user
+certificate requests, we change the suffix to "c" from "ca". This is to label
+each as "certificate" or "certificate authority" respectively. To sign this
+configuration, we use "user.tls.sub" as our <request label> and "tls.sub" as
+our <signing CA label>.
 
 actions:
     request <request label> <signing CA label>
@@ -391,7 +391,7 @@ actions:
             CA.
 
     genpkcs12 <request label> <signing CA label>
-            Package user private key and signed certificate for <request
+            Package ee private key and signed certificate for <request
             label> with CA certificate chain from <signing CA label> in a
             PKCS#12" bundle for export.
 
@@ -418,9 +418,9 @@ main() {
             declare action="$2" subCaLabel="$3" subCaParentLabel=${4:-root}
             subca "$action" "$subCaLabel" "$subCaParentLabel"
             ;;
-        usercert)
+        eecert)
             declare action="$2" csrLabel="$3" caParentLabel=${4:-"sub"}
-            usercert "$action" "$csrLabel" "$caParentLabel"
+            eecert "$action" "$csrLabel" "$caParentLabel"
             ;;
         *)
             display_usage_main
