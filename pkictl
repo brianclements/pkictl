@@ -179,8 +179,13 @@ rootca() {
 
 subca() {
     declare action="$1"
-    declare subCaLabel=${2:-"sub"}
-    declare signingCaLabel=${3:-"root"}
+    declare subCaLabel="$2"
+    declare signingCaLabel="$3"
+    if [[ "$subCaLabel" == "" ]]; then
+        echo "argument error: <subca label> field required."
+        echo ""
+        display_usage_subca
+    fi
     declare caName="${PKICTL_ORG}-${subCaLabel}.root.ca"
     declare caPath="${PKICTL_ROOT_DIR}/${caName}"
     declare conf="${PKICTL_ROOT_DIR}/${caName}.cnf"
@@ -194,7 +199,11 @@ subca() {
             gen_request 
             ;;
         sign)
-            if [[ "$signingCaLabel" == "root" ]]; then
+            if [[ "$signingCaLabel" == "" ]]; then
+                echo "argument error: <signing CA label> field required."
+                echo ""
+                display_usage_subca
+            elif [[ "$signingCaLabel" == "root" ]]; then
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-root.ca.cnf"
             else
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
@@ -207,7 +216,11 @@ subca() {
             gen_crl 
             ;;
         genpem)
-            if [[ "$signingCaLabel" == "root" ]]; then
+            if [[ "$signingCaLabel" == "" ]]; then
+                echo "argument error: <signing CA label> field required."
+                echo ""
+                display_usage_subca
+            elif [[ "$signingCaLabel" == "root" ]]; then
                 declare caName="${PKICTL_ORG}-root.ca"
                 declare parentCert="${PKICTL_ROOT_DIR}/${caName}/${caName}.crt"
             else
@@ -218,7 +231,11 @@ subca() {
             gen_pem
             ;;
         revoke)
-            if [[ "$signingCaLabel" == "root" ]]; then
+            if [[ "$signingCaLabel" == "" ]]; then
+                echo "argument error: <signing CA label> field required."
+                echo ""
+                display_usage_subca
+            elif [[ "$signingCaLabel" == "root" ]]; then
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.ca.cnf"
             else
                 declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
@@ -241,26 +258,39 @@ subca() {
 
 eecert() {
     declare action="$1"
-    declare requestLabel=${2:-"sub.sub"}
-    declare signingCaLabel=${3:-"sub"}
+    declare requestLabel="$2"
+    declare signingCaLabel="$3"
+
+    eecert_arg_check() {
+        if [[ "$requestLabel" == "" ]] || [[ "$signingCaLabel" == "" ]]; then
+            echo "argument error: both <request label> and <signing CA label> fields required."
+            echo ""
+            display_usage_eecert
+        fi
+    }
+
     declare caName="${PKICTL_ORG}-${requestLabel}.root.c"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
         request)
+            eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.c.conf"
             gen_request 
             ;;
         sign)
+            eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
             declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
             ;;
         genpkcs12)
+            eecert_arg_check
             gen_pkcs12
             ;;
         revoke)
+            eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
             declare caName="${PKICTL_ORG}-${requestLabel}.root.c"
             revoke_cert
