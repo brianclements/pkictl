@@ -40,15 +40,15 @@ around the internet (including this one!).
 - Root CA: CA at the root of a PKI hierarchy. Issues only CA certificates.
 - Intermediate/Policy/Subordinate CA: CA below the root CA but not a signing CA.
   Issues only CA certificates.
-- Signing/Issuing CA: CA at the bottom of a PKI hierarchy. Issues only user
-  certificates.
+- Signing/Issuing CA: CA at the bottom of a PKI hierarchy. Issues only end
+  entity certificates.
 
 ### Certificate Types
 
-- CA Certificate: Certificate of a CA. Used to sign certificates and CRLs.
 - Root Certificate: Self-signed CA certificate at the root of a PKI hierarchy.
   Serves as the PKI's trust anchor.
-- User Certificate: End-user certificate issued for one or more purposes:
+- CA Certificate: Certificate of a CA. Used to sign certificates and CRLs.
+- End Entity/User Certificate: End-user certificate issued for one or more purposes:
   email-protection, server-auth, client-auth, code-signing, etc.  A user
   certificate cannot sign other certificates.
 
@@ -64,7 +64,7 @@ assumes:
     * A final generation of _n..._ siblings of signing CA's.
 2. 1-to-1 certificate/configuration pairing
     * One configuration file per CA
-    * One configuration file per CSR type.
+    * One configuration file per end entity CSR type.
 
 Each generation inherits a copy of the chain from it's predecessors, so we have
 an opportunity to use/extend the line of certificates, using all the same CLI
@@ -89,18 +89,19 @@ that which is already setup via configuration files. To use:
        convention is desirable anyway to help keep track of all the keys, CSR's,
        certificates etc. The name scheme for pkictl does the following:
 
-        `<domain/org name>-[<CA subdomain labels>...].root.<certificate type>[.<artifact suffix>]`
+        `<domain/org name>-[<CA subdomain labels>...].root.<certificate type>[.<artifact suffix>][.<artifact file format>]`
 
         where:
         
         * `<domain/org name>`: name of internal network. "Myorg.local"
-        * `<CA subdomain labels>`: subordinate levels below "root". This is "sub",
-          "tls.sub", "user.tls.sub", etc.
-        * `<certificate type>`: "ca" for certificate authorities, "c" for user
+        * `<CA subdomain labels>`: subordinate levels below "root". This is
+          "sub", "tls.sub", "node.tls.sub", etc.
+        * `<certificate type>`: "ca" for a configuration that issues certificate
+          authorities, "eereq" for a configuration that issues end entity
           certificates.
         * `<artifact suffix>`: determined by file type. ".csr", ".key", ".crt",
           ".crl", ".cnf", ".conf", etc. Note that ".cnf" is used for CA
-          configuration files while ".conf" is used for user request
+          configuration files while ".conf" is used for end entity request
           configuration files.
 
         An example hierarchy of this naming convention could look like this:
@@ -108,9 +109,9 @@ that which is already setup via configuration files. To use:
             myorg.local-root.ca
             └── myorg.local-sub.root.ca
                 ├── myorg.local-tls.sub.root.ca
-                │   └── server.myorg.local-user.tls.sub.root.c
+                │   └── server.myorg.local-node.tls.sub.root.eereq
                 └── myorg.local-email.sub.root.ca
-                    └── myorg.local-user.email.sub.root.c
+                    └── myorg.local-user.email.sub.root.eereq
 
         Some Description:
 
@@ -118,12 +119,14 @@ that which is already setup via configuration files. To use:
             * `myorg.local-sub.root.ca`: An intermediate CA, child of root
                 * `myorg.local-tls.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-user.tls.sub.root.c`: A user certificate, child of
-                      tls.sub.root.ca, great-grandchild of root
+                    * `server.myorg.local-node.tls.sub.root.eereq`: An end
+                      entity certificate, child of tls.sub.root.ca,
+                      great-grandchild of root
                 * `myorg.local-email.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-user.email.sub.root.c`: A user certificate, child of
-                      email.sub.root.ca, great-grandchild of root
+                    * `server.myorg.local-user.email.sub.root.eereq`: An end
+                      entity certificate, child of email.sub.root.ca,
+                      great-grandchild of root
 
         The list of configuration files would be:
 
@@ -131,9 +134,9 @@ that which is already setup via configuration files. To use:
             ├── myorg.local-root.ca.cnf
             ├── myorg.local-sub.root.ca.cnf
             ├── myorg.local-tls.sub.root.ca.cnf
-            ├── myorg.local-user.tls.sub.root.c.conf
+            ├── myorg.local-node.tls.sub.root.eereq.conf
             ├── myorg.local-email.sub.root.ca.cnf
-            └── myorg.local-user.email.sub.root.c.conf
+            └── myorg.local-user.email.sub.root.eereq.conf
             
 3. Setup environment
 
