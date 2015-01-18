@@ -269,13 +269,13 @@ eecert() {
         fi
     }
 
-    declare caName="${PKICTL_ORG}-${requestLabel}.root.c"
+    declare caName="${PKICTL_ORG}-${requestLabel}.root.eereq"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
         request)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.c.conf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.eereq.conf"
             gen_request 
             ;;
         sign)
@@ -292,7 +292,7 @@ eecert() {
         revoke)
             eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
-            declare caName="${PKICTL_ORG}-${requestLabel}.root.c"
+            declare caName="${PKICTL_ORG}-${requestLabel}.root.eereq"
             revoke_cert
             declare caName="${PKICTL_ORG}-${caParentLabel}.root.ca"
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
@@ -413,12 +413,12 @@ sub-levels from root and must coincide with the filename of its configuration
 file. So if \$PKICTL_ORG was "sample.org", the root CA is named
 "sample.org-root.ca". A subordinate signing CA two levels below could be
 "tls.sub", its name would be "sample.org-tls.sub.root.ca" and its label
-"tls.sub". An end entity certificate request could be named "user.tls.sub".
-Its full name would be "sample.org-user.tls.sub.root.c". Notice that for user
-certificate requests, we change the suffix to "c" from "ca". This is to label
-each as "certificate" or "certificate authority" respectively. To sign this
-configuration, we use "user.tls.sub" as our <request label> and "tls.sub" as
-our <signing CA label>.
+"tls.sub". An end entity certificate request could be named "node.tls.sub".
+Its full name would be "sample.org-node.tls.sub.root.eereq". Notice that for
+end entity certificate requests, we change the suffix to "eereq" from "ca".
+This is to label each as "certificate" or "certificate authority" respectively.
+To sign this configuration, we use "node.tls.sub" as our <request label> and
+"tls.sub" as our <signing CA label>.
 
 actions:
     request <request label> <signing CA label>
