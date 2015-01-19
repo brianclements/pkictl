@@ -39,7 +39,7 @@ init_db() {
 ##############################################################################
 
 gen_request() {
-    csrName="$caName"
+    csrName=${eeName:-"$caName"}
     openssl req -new \
         -config "$conf" \
         -out "${caPath}/${csrName}.csr" \
@@ -82,8 +82,8 @@ sign_root_ca_request() {
 }
 
 sign_request() {
-    csrName="$caName"
-    outName="$caName"
+    csrName=${eeName:-"$caName"}
+    outName=${eeName:-"$caName"}
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
@@ -127,9 +127,9 @@ gen_pem() {
 }
 
 gen_pkcs12() {
-    outName="$caName"
+    outName=${eeName:-"$caName"}
     openssl pkcs12 -export \
-        -name "${caName}" \
+        -name "${outName}" \
         -inkey "${caPath}/private/${caName}.key" \
         -in "${caPath}/${caName}.crt" \
         -certfile "${caPath}/${PKICTL_ORG}-${signingCaLabel}.chain.pem" \
@@ -269,7 +269,7 @@ eecert() {
         fi
     }
 
-    declare caName="${PKICTL_ORG}-${requestLabel}.root.eereq"
+    declare eeName="${PKICTL_ORG}-${requestLabel}.root.eereq"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
@@ -287,14 +287,15 @@ eecert() {
             ;;
         genpkcs12)
             eecert_arg_check
+            declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             gen_pkcs12
             ;;
         revoke)
             eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
-            declare caName="${PKICTL_ORG}-${requestLabel}.root.eereq"
+            declare eeName="${PKICTL_ORG}-${requestLabel}.root.eereq"
             revoke_cert
-            declare caName="${PKICTL_ORG}-${caParentLabel}.root.ca"
+            declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
