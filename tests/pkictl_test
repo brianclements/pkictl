@@ -59,6 +59,7 @@ test_subca() {
     "$PKICTL_CMD" subca sign email.sub sub
     "$PKICTL_CMD" subca gencrl email.sub
     "$PKICTL_CMD" subca genpem email.sub sub
+    "$PKICTL_CMD" subca revoke email.sub sub
 }
 
 test_eecert() {
@@ -79,6 +80,7 @@ test_eecert() {
     "$PKICTL_CMD" eecert request user.email.sub email.sub
     "$PKICTL_CMD" eecert sign user.email.sub email.sub
     "$PKICTL_CMD" eecert genpkcs12 user.email.sub email.sub
+    "$PKICTL_CMD" eecert revoke user.email.sub email.sub
 }
 
 main() {
