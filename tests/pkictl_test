@@ -67,11 +67,11 @@ test_eecert() {
     echo "#######################################"
     echo "running eecert tests"
     echo ""
-    echo "setting up user.tls.sub user certificate..."
+    echo "setting up node.tls.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" eecert request user.tls.sub tls.sub
-    "$PKICTL_CMD" eecert sign user.tls.sub tls.sub
-    "$PKICTL_CMD" eecert genpkcs12 user.tls.sub tls.sub
+    "$PKICTL_CMD" eecert request node.tls.sub tls.sub
+    "$PKICTL_CMD" eecert sign node.tls.sub tls.sub
+    "$PKICTL_CMD" eecert genpkcs12 node.tls.sub tls.sub
 
     echo ""
     echo "setting up user.mail.sub user certificate..."
