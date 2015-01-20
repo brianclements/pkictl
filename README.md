@@ -97,7 +97,7 @@ that which is already setup via configuration files. To use:
         * `<CA subdomain labels>`: subordinate levels below "root". This is
           "sub", "tls.sub", "node.tls.sub", etc.
         * `<certificate type>`: "ca" for a configuration that issues certificate
-          authorities, "eereq" for a configuration that issues end entity
+          authorities, "ee" for a configuration that issues end entity
           certificates.
         * `<artifact suffix>`: determined by file type. ".csr", ".key", ".crt",
           ".crl", ".cnf", ".conf", etc. Note that ".cnf" is used for CA
@@ -109,9 +109,9 @@ that which is already setup via configuration files. To use:
             myorg.local-root.ca
             └── myorg.local-sub.root.ca
                 ├── myorg.local-tls.sub.root.ca
-                │   └── server.myorg.local-node.tls.sub.root.eereq
+                │   └── server.myorg.local-node.tls.sub.root.ee
                 └── myorg.local-email.sub.root.ca
-                    └── myorg.local-user.email.sub.root.eereq
+                    └── myorg.local-user.email.sub.root.ee
 
         Some Description:
 
@@ -119,12 +119,12 @@ that which is already setup via configuration files. To use:
             * `myorg.local-sub.root.ca`: An intermediate CA, child of root
                 * `myorg.local-tls.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-node.tls.sub.root.eereq`: An end
+                    * `server.myorg.local-node.tls.sub.root.ee`: An end
                       entity certificate, child of tls.sub.root.ca,
                       great-grandchild of root
                 * `myorg.local-email.sub.root.ca`: A signing CA, child of sub,
                   grandchild of root
-                    * `server.myorg.local-user.email.sub.root.eereq`: An end
+                    * `server.myorg.local-user.email.sub.root.ee`: An end
                       entity certificate, child of email.sub.root.ca,
                       great-grandchild of root
 
@@ -134,9 +134,9 @@ that which is already setup via configuration files. To use:
             ├── myorg.local-root.ca.cnf
             ├── myorg.local-sub.root.ca.cnf
             ├── myorg.local-tls.sub.root.ca.cnf
-            ├── myorg.local-node.tls.sub.root.eereq.conf
+            ├── myorg.local-node.tls.sub.root.ee.conf
             ├── myorg.local-email.sub.root.ca.cnf
-            └── myorg.local-user.email.sub.root.eereq.conf
+            └── myorg.local-user.email.sub.root.ee.conf
             
 3. Setup environment
 

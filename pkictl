@@ -280,15 +280,15 @@ eecert() {
         fi
     }
 
-    declare csrName="${PKICTL_ORG}-${requestLabel}.root.eereq"
-    declare eeName="${PKICTL_ORG}-${outputLabel}.root.eereq"
+    declare csrName="${PKICTL_ORG}-${requestLabel}.root.ee"
+    declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
     declare exportName="${PKICTL_ORG}-${outputLabel}.ee"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
         request)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.eereq.conf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.ee.conf"
             gen_request 
             ;;
         sign)
