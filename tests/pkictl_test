@@ -70,17 +70,17 @@ test_eecert() {
     echo ""
     echo "setting up node.tls.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" eecert request node.tls.sub tls.sub
-    "$PKICTL_CMD" eecert sign node.tls.sub tls.sub
-    "$PKICTL_CMD" eecert genpkcs12 node.tls.sub tls.sub
+    "$PKICTL_CMD" eecert request node.tls.sub tls.sub testnodename
+    "$PKICTL_CMD" eecert sign testnodename tls.sub
+    "$PKICTL_CMD" eecert genpkcs12 testnodename tls.sub nodeexportname
 
     echo ""
     echo "setting up user.mail.sub user certificate..."
     echo ""
-    "$PKICTL_CMD" eecert request user.email.sub email.sub
-    "$PKICTL_CMD" eecert sign user.email.sub email.sub
-    "$PKICTL_CMD" eecert genpkcs12 user.email.sub email.sub
-    "$PKICTL_CMD" eecert revoke user.email.sub email.sub
+    "$PKICTL_CMD" eecert request user.email.sub email.sub testusername
+    "$PKICTL_CMD" eecert sign testusername email.sub
+    "$PKICTL_CMD" eecert genpkcs12 testusername email.sub userexportname
+    "$PKICTL_CMD" eecert revoke testusername email.sub
 }
 
 main() {
