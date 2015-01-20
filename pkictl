@@ -172,6 +172,8 @@ rootca() {
             gen_crl 
             ;;
         *)
+            echo "argument error: missing or incorrect action."
+            echo ""
             display_usage_rootca
             ;;
     esac
@@ -251,6 +253,8 @@ subca() {
             gen_crl 
             ;;
         *)
+            echo "argument error: missing or incorrect action."
+            echo ""
             display_usage_subca
             ;;
     esac
@@ -301,6 +305,8 @@ eecert() {
             gen_crl 
             ;;
         *)
+            echo "argument error: missing or incorrect action."
+            echo ""
             display_usage_eecert
             ;;
     esac
@@ -463,6 +469,8 @@ main() {
             eecert "$action" "$requestLabel" "$signingCaLabel"
             ;;
         *)
+            echo "argument error: missing or incorrect subcommand."
+            echo ""
             display_usage_main
             ;;
     esac
