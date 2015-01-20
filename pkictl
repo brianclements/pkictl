@@ -171,6 +171,9 @@ rootca() {
         gencrl)
             gen_crl 
             ;;
+        help)
+            display_usage_rootca
+            ;;
         *)
             echo "argument error: missing or incorrect action."
             echo ""
@@ -252,6 +255,9 @@ subca() {
             echo "Regenerating CRL..."
             gen_crl 
             ;;
+        help)
+            display_usage_subca
+            ;;
         *)
             echo "argument error: missing or incorrect action."
             echo ""
@@ -305,6 +311,9 @@ eecert() {
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
+            ;;
+        help)
+            display_usage_eecert
             ;;
         *)
             echo "argument error: missing or incorrect action."
@@ -469,6 +478,9 @@ main() {
         eecert)
             declare action="$2" requestLabel="$3" signingCaLabel="$4" outputLabel="$5"
             eecert "$action" "$requestLabel" "$signingCaLabel" "$outputLabel"
+            ;;
+        help)
+            display_usage_main
             ;;
         *)
             echo "argument error: missing or incorrect subcommand."
