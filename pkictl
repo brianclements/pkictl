@@ -137,9 +137,10 @@ gen_pkcs12() {
 
 revoke_cert() {
     PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
+    revokeName=${csrName:-"$caName"}
     openssl ca \
         -config "$conf" \
-        -revoke "${caPath}/${caName}.crt" \
+        -revoke "${caPath}/${revokeName}.crt" \
         -crl_reason "$PKICTL_CRL_REASON"
 }
 
