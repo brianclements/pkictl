@@ -82,8 +82,8 @@ sign_root_ca_request() {
 }
 
 sign_request() {
-    csrName=${eeName:-"$caName"}
-    outName=${eeName:-"$caName"}
+    csrName=${csrName:-"$caName"}
+    outName=${csrName:-"$caName"}
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
@@ -127,13 +127,12 @@ gen_pem() {
 }
 
 gen_pkcs12() {
-    outName=${eeName:-"$caName"}
     openssl pkcs12 -export \
-        -name "${outName}" \
-        -inkey "${caPath}/private/${caName}.key" \
-        -in "${caPath}/${caName}.crt" \
+        -name "${outputLabel}" \
+        -inkey "${caPath}/private/${csrName}.key" \
+        -in "${caPath}/${csrName}.crt" \
         -certfile "${caPath}/${PKICTL_ORG}-${signingCaLabel}.chain.pem" \
-        -out "${caPath}/${outName}.p12"
+        -out "${caPath}/${exportName}.p12"
 }
 
 revoke_cert() {
@@ -264,16 +263,19 @@ eecert() {
     declare action="$1"
     declare requestLabel="$2"
     declare signingCaLabel="$3"
+    declare outputLabel=${4:-$requestLabel}
 
     eecert_arg_check() {
-        if [[ "$requestLabel" == "" ]] || [[ "$signingCaLabel" == "" ]]; then
-            echo "argument error: both <request label> and <signing CA label> fields required."
+        if [[ "$requestLabel" == "" ]] || [[ "$outputLabel" == "" ]]; then
+            echo "argument error: <request label>, <signing CA label>, and <output label> fields required."
             echo ""
             display_usage_eecert
         fi
     }
 
-    declare eeName="${PKICTL_ORG}-${requestLabel}.root.eereq"
+    declare csrName="${PKICTL_ORG}-${requestLabel}.root.eereq"
+    declare eeName="${PKICTL_ORG}-${outputLabel}.root.eereq"
+    declare exportName="${PKICTL_ORG}-${outputLabel}.ee"
     declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
@@ -297,7 +299,6 @@ eecert() {
         revoke)
             eecert_arg_check
             declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
-            declare eeName="${PKICTL_ORG}-${requestLabel}.root.eereq"
             revoke_cert
             declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
@@ -465,8 +466,8 @@ main() {
             subca "$action" "$subCaLabel" "$signingCaLabel"
             ;;
         eecert)
-            declare action="$2" requestLabel="$3" signingCaLabel="$4"
-            eecert "$action" "$requestLabel" "$signingCaLabel"
+            declare action="$2" requestLabel="$3" signingCaLabel="$4" outputLabel="$5"
+            eecert "$action" "$requestLabel" "$signingCaLabel" "$outputLabel"
             ;;
         *)
             echo "argument error: missing or incorrect subcommand."
