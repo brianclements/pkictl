@@ -378,19 +378,19 @@ display_usage_subca() {
     cat <<EOF
 Usage: pkictl subca <action> <subca label> [<signing CA label>]
 
-Create a subordinate private key, CSR, and CA named <subca label> and sign it
-with senior CA named <signing CA label>.
+Create a subordinate private key, CSR, certificate, and CRL named <subca label>
+and sign it with senior CA named <signing CA label>. Optionally, revoke issued
+certificate <subca label> via <signing CA label>.
 
 Labeling Arguments:
 <subca label> must be supplied on every action usage. It is made up of the
 sub-levels from root and must coincide with the filename of its configuration
 file. So if \$PKICTL_ORG was "sample.org", the root CA is named
 "sample.org-root.ca". A subordinate CA below this one could have the name
-"sub". It would be named "sample.org-sub.root.ca". In these examples, the
-<subca label> is "sub" while the <signing CA label> would be "root". A
-third level below that could be "tls.sub", its name would be
-"sample.org-tls.sub.root.ca" and the <subca label> for it would be
-"tls.sub".
+"sub". It would be named "sample.org-sub.root.ca". In this example, the <subca
+label> is "sub" while the <signing CA label> would be "root". A third level
+below that could be named "tls.sub". Its full name would be
+"sample.org-tls.sub.root.ca" and the <subca label> for it would be "tls.sub".
 
 actions:
     init <subca label>
@@ -418,44 +418,54 @@ EOF
 
 display_usage_eecert() {
     cat <<EOF
-Usage: pkictl eecert <action> <request label> <signing CA label>
+Usage: pkictl eecert <action> 
+                              (<request label>|<end entity label>)
+                              <signing CA label>
+                              [<output label>]
 
 Create an end entity CSR, private key, certificate, and PKCS#12 bundle named
-<request label> and sign with subordinate CA named <signing CA label>.
-Optionally, revoke issued end entity certificate <request label> with CA named
-<signing CA label>.
+<output label>, using configuration from <request label>, and sign with
+subordinate CA named <signing CA label>. Later, reference <end entity label> to
+choose what credentials to sign and package. Optionally, revoke issued end
+entity certificate <output label> with CA named <signing CA label>.
 
 Labeling Arguments:
-<request label> must be supplied on every action usage. It is made up of the
-sub-levels from root and must coincide with the filename of its configuration
-file. So if \$PKICTL_ORG was "sample.org", the root CA is named
-"sample.org-root.ca". A subordinate signing CA two levels below could be
-"tls.sub", its name would be "sample.org-tls.sub.root.ca" and its label
-"tls.sub". An end entity certificate request could be named "node.tls.sub".
-Its full name would be "sample.org-node.tls.sub.root.eereq". Notice that for
-end entity certificate requests, we change the suffix to "eereq" from "ca".
-This is to label each as "certificate" or "certificate authority" respectively.
-To sign this configuration, we use "node.tls.sub" as our <request label> and
-"tls.sub" as our <signing CA label>.
+<request label> and <signing CA label> must be supplied on every action usage.
+The labeling names are made up of the sub-levels from root and must coincide
+with the filename of its configuration file. So if \$PKICTL_ORG was
+"sample.org", the root CA is named "sample.org-root.ca". A subordinate signing
+CA two levels below could be "tls.sub", its name would be
+"sample.org-tls.sub.root.ca" and its label would be "tls.sub". An end entity
+certificate request could be named "node.tls.sub".  Its full name would be
+"sample.org-node.tls.sub.root.ee". Notice that for end entity certificate
+requests, we change the suffix to "ee" from "ca".  This is to label each as
+"end entity" or "certificate authority" respectively.  To sign this
+configuration, we use "node.tls.sub" as our <request label> and "tls.sub" as
+our <signing CA label>.
 
 actions:
-    request <request label> <signing CA label>
-            Create private key and certificate request for <request label>.
-            CSR can be found in folder for <signing CA label>.
+    request <request label> <signing CA label> <output label>
+            Create private key and certificate request from configuration named
+            <request label> and name it <output label>. The CSR can be found in
+            folder for <signing CA label>. From here on, the end entity
+            key/certificate pair named <output label> will be referenced as
+            <end entity label>. This name cannot change from this point
+            forward.
 
-    sign <request label> <signing CA label>
-            Sign <request label> CSR with private key from <signing CA label>
+    sign <end entity label> <signing CA label>
+            Sign the CSR named <end entity label> with private key from
+            <signing CA label> CA.
+
+    genpkcs12 <end entity label> <signing CA label> [<output label>]
+            Package private key and signed certificate from <end entity label>
+            with CA certificate chain from <signing CA label> in a PKCS#12"
+            bundle for export and optionally name it a more friendly name
+            <output label>.
+
+    revoke <end entity label> <signing CA label>
+            Revoke issued certificate <end entity label> with CA <signing CA
+            label> and automatically generate new CRL for <signing CA label>
             CA.
-
-    genpkcs12 <request label> <signing CA label>
-            Package ee private key and signed certificate for <request
-            label> with CA certificate chain from <signing CA label> in a
-            PKCS#12" bundle for export.
-
-    revoke <request label> <signing CA label>
-            Revoke issued certificate <request label> with CA <signing CA
-            label> and automatically generate new CRL for CA <signing CA
-            label>.
 EOF
     exit 1
 }
