@@ -39,7 +39,7 @@ init_db() {
 ##############################################################################
 
 gen_request() {
-    csrName=${eeName:-"$caName"}
+    declare csrName=${eeName:-"$caName"}
     openssl req -new \
         -config "$conf" \
         -out "${caPath}/${csrName}.csr" \
@@ -48,8 +48,8 @@ gen_request() {
 }
 
 sign_root_ca_request() {
-    csrName="$caName"
-    outName="$caName"
+    declare csrName="$caName"
+    declare outName="$caName"
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca -selfsign \
             -config "$conf" \
@@ -82,8 +82,8 @@ sign_root_ca_request() {
 }
 
 sign_request() {
-    csrName=${csrName:-"$caName"}
-    outName=${csrName:-"$caName"}
+    declare csrName=${csrName:-"$caName"}
+    declare outName=${csrName:-"$caName"}
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
@@ -136,8 +136,8 @@ gen_pkcs12() {
 }
 
 revoke_cert() {
-    PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
-    revokeName=${csrName:-"$caName"}
+    declare PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
+    declare revokeName=${csrName:-"$caName"}
     openssl ca \
         -config "$conf" \
         -revoke "${caPath}/${revokeName}.crt" \
