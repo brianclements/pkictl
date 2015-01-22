@@ -9,7 +9,7 @@
 ##----------------
 
 # Tunable settings
-export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}     # Same as organizationName in openssl.cnf
+export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used in *.conf files
 
 # Script settings
 export PKICTL_ROOT_DIR=${PKICTL_ROOT_DIR:-$PWD}
@@ -153,7 +153,7 @@ rootca() {
     declare caCertDepth="root"
     declare caName="${PKICTL_ORG}-${caCertDepth}.ca"
     declare caPath="${PKICTL_ROOT_DIR}/${caName}"
-    declare conf="${PKICTL_ROOT_DIR}/${caName}.cnf"
+    declare conf="${PKICTL_ROOT_DIR}/${caName}.conf"
 
     case "$action" in
         init)
@@ -193,7 +193,7 @@ subca() {
     fi
     declare caName="${PKICTL_ORG}-${subCaLabel}.root.ca"
     declare caPath="${PKICTL_ROOT_DIR}/${caName}"
-    declare conf="${PKICTL_ROOT_DIR}/${caName}.cnf"
+    declare conf="${PKICTL_ROOT_DIR}/${caName}.conf"
 
     case "$action" in
         init)
@@ -209,9 +209,9 @@ subca() {
                 echo ""
                 display_usage_subca
             elif [[ "$signingCaLabel" == "root" ]]; then
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-root.ca.conf"
             else
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             fi
             declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
@@ -241,9 +241,9 @@ subca() {
                 echo ""
                 display_usage_subca
             elif [[ "$signingCaLabel" == "root" ]]; then
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.ca.conf"
             else
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             fi
             revoke_cert
             if [[ "$signingCaLabel" == "root" ]]; then
@@ -293,7 +293,7 @@ eecert() {
             ;;
         sign)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
@@ -305,7 +305,7 @@ eecert() {
             ;;
         revoke)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.cnf"
+            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             revoke_cert
             declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
@@ -334,7 +334,7 @@ Usage: pkictl <subcommand> <action> <action args>
 Pkictl is a biased Public Key Infrastructure (PKI) management helper tool.
 It's designed to make certificate, key creation, and management tasks formal,
 easy to initiate, and easy to automate. The complexities of the openssl
-settings are to be absorbed by the various openssl.cnf files, saving only
+settings are to be absorbed by the various openssl.conf files, saving only
 execution of the tasks for the script itself.
 
 Subcommands:    Actions:

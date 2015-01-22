@@ -4,7 +4,7 @@ Pkictl is a biased Public Key Infrastructure (PKI) management helper tool for
 implementing an internal network PKI. It's designed to make certificate, key
 creation, and management tasks formal, easy to initiate, and easy to automate.
 The complexities of the openssl settings are to be absorbed by the various
-openssl.cnf files, saving only execution of the tasks for the script itself.
+configuration files, saving only execution of the tasks for the script itself.
 
 My goal was to use the same configuration files, folder layout, and
 implementation behavior in every machine of my internal PKI infrastructure and
@@ -100,9 +100,10 @@ that which is already setup via configuration files. To use:
           authorities, "ee" for a configuration that issues end entity
           certificates.
         * `<artifact suffix>`: determined by file type. ".csr", ".key", ".crt",
-          ".crl", ".cnf", ".conf", etc. Note that ".cnf" is used for CA
-          configuration files while ".conf" is used for end entity request
-          configuration files.
+          ".crl", ".conf", etc. 
+        * `<artifact file format>`: if <artifact suffix> is supplied only,
+          assume "PEM" ASCII format. When "DER" format is used, this suffix will
+          be appended to the filename.
 
         An example hierarchy of this naming convention could look like this:
 
@@ -131,11 +132,11 @@ that which is already setup via configuration files. To use:
         The list of configuration files would be:
 
             .
-            ├── myorg.local-root.ca.cnf
-            ├── myorg.local-sub.root.ca.cnf
-            ├── myorg.local-tls.sub.root.ca.cnf
+            ├── myorg.local-root.ca.conf
+            ├── myorg.local-sub.root.ca.conf
+            ├── myorg.local-tls.sub.root.ca.conf
             ├── myorg.local-node.tls.sub.root.ee.conf
-            ├── myorg.local-email.sub.root.ca.cnf
+            ├── myorg.local-email.sub.root.ca.conf
             └── myorg.local-user.email.sub.root.ee.conf
             
 3. Setup environment
