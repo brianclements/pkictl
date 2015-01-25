@@ -182,3 +182,7 @@ TODO
     * [Hierarchies in PKI](http://networklore.com/hierarchies-in-pki/)
 
 [pki-tutorial]: http://pki-tutorial.readthedocs.org/en/latest/index.html
+
+## License
+
+MIT
