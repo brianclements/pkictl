@@ -342,10 +342,15 @@ Subcommands:    Actions:
                 (init|request|sign|gencrl|help)
 
     subca
-                (init|request|sign|gencrl|genpem|revoke|help) <subca label> [<signing CA label>]
+                (init|request|sign|gencrl|genpem|revoke|help)
+                <subca label>
+                [<signing CA label>]
 
     eecert
-                (request|sign|genpkcs12|revoke|help) <request label> <signing CA label>
+                (request|sign|genpkcs12|revoke|help)
+                (<request label>|<end entity label>)
+                <signing CA label>
+                [<output label>|<export name>]
 
     help
 EOF
@@ -421,7 +426,7 @@ display_usage_eecert() {
 Usage: pkictl eecert <action> 
                               (<request label>|<end entity label>)
                               <signing CA label>
-                              [<output label>]
+                              [<output label>|<export name>]
 
 Create an end entity CSR, private key, certificate, and PKCS#12 bundle named
 <output label>, using configuration from <request label>, and sign with
@@ -456,11 +461,11 @@ actions:
             Sign the CSR named <end entity label> with private key from
             <signing CA label> CA.
 
-    genpkcs12 <end entity label> <signing CA label> [<output label>]
+    genpkcs12 <end entity label> <signing CA label> [<export name>]
             Package private key and signed certificate from <end entity label>
             with CA certificate chain from <signing CA label> in a PKCS#12"
             bundle for export and optionally name it a more friendly name
-            <output label>.
+            <export name>.
 
     revoke <end entity label> <signing CA label>
             Revoke issued certificate <end entity label> with CA <signing CA
