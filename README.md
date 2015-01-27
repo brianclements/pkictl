@@ -160,7 +160,46 @@ that which is already setup via configuration files. To use:
 
 ## Usage
 
-TODO
+The subcommands are grouped into 3 categories: `rootca`, `subca`, and `eecert`.
+Below are real examples using the provided configuration files.
+
+### Rootca
+
+Setup a typical self-signed root certificate:
+
+>`Usage: pkictl rootca <action>`
+
+* `pkictl rootca init`
+* `pkictl rootca request`
+* `pkictl rootca sign`
+* `pkictl rootca gencrl`
+
+### Subca
+
+Setup and manage the intermediate certificates from the first sub-root
+certificate, all the way to the issuing/signing certificates at the very bottom
+of the PKI hierarchy:
+
+>`Usage: pkictl subca <action> <subca label> [<signing CA label>]`
+
+* `pkictl subca init sub`
+* `pkictl subca request sub`
+* `pkictl subca sign tls.sub sub`
+* `pkictl subca gencrl email.sub`
+* `pkictl subca genpem sub root`
+* `pkictl subca revoke sub root`
+
+### Eecert
+
+Issue end-entity certificates from the issuing/signing certificates at the
+bottom of the PKI hierarchy.
+
+>`Usage: pkictl eecert <action> (<request label>|<end entity label>) <signing CA label> [<output label>|<export name>]`
+
+* `pkictl eecert request node.tls.sub tls.sub somehostname.localnet`
+* `pkictl eecert sign somehostname.localnet tls.sub`
+* `pkictl eecert genpkcs12 somehostname.localnet tls.sub exportname.somehost.localnet`
+* `pkictl eecert revoke somehostname.localnet tls.sub`
 
 ## Sources
 
