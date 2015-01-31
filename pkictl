@@ -13,6 +13,7 @@ export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used 
 
 # Script settings
 export PKICTL_ROOT_DIR=${PKICTL_ROOT_DIR:-$PWD}
+export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-/etc/ssl}
 
 ##############################################################################
 ## Setup
@@ -32,6 +33,13 @@ init_db() {
     cp /dev/null "${caPath}/db/${caName}.db.attr"
     echo 01 > "${caPath}/db/${caName}.crt.srl"
     echo 01 > "${caPath}/db/${caName}.crl.srl"
+}
+
+init_import_folders() {
+    if [[ ! -d "$importPath" ]]; then
+        mkdir -p "${importPath}/private" "${importPath}/certs"
+        chmod 770 "${importPath}/private"
+    fi
 }
 
 ##############################################################################
@@ -142,6 +150,44 @@ revoke_cert() {
         -config "$conf" \
         -revoke "${caPath}/${revokeName}.crt" \
         -crl_reason "$PKICTL_CRL_REASON"
+}
+
+##############################################################################
+## Import Commands
+##############################################################################
+
+extract_chain() {
+    openssl pkcs12 \
+        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${importPath}/${PKICTL_ORG}-${exportName}.chain.pem" \
+        -nodes \
+        -nokeys \
+        -cacerts \
+        -passin pass:"${PKICTL_PKCS12_PASS}"
+}
+
+extract_client_key() {
+    openssl pkcs12 \
+        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${importPath}/private/${PKICTL_ORG}-${exportName}.ee.key" \
+        -nodes \
+        -nocerts \
+        -passin pass:"${PKICTL_PKCS12_PASS}"
+    chmod 770 "${importPath}/private/${PKICTL_ORG}-${exportName}.ee.key"
+}
+
+extract_client_cert() {
+    openssl pkcs12 \
+        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.ee.crt" \
+        -nodes \
+        -clcerts \
+        -nokeys \
+        -passin pass:"${PKICTL_PKCS12_PASS}"
+}
+
+split_pem() {
+    cat ${PKICTL_ORG}-${exportName}.chain.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".crt"}'
 }
 
 ##############################################################################
@@ -311,6 +357,14 @@ eecert() {
             declare caPath="${PKICTL_ROOT_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
+            ;;
+        import)
+            declare importPath="${PKICTL_IMPORT_DIR}/${PKICTL_ORG}"
+            declare exportName="${requestLabel}"
+            init_import_folders
+            extract_chain
+            extract_client_key
+            extract_client_cert
             ;;
         help)
             display_usage_eecert
