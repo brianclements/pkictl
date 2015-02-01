@@ -19,7 +19,7 @@ export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-/etc/ssl}
 ## Setup
 ##############################################################################
 
-init_folders() {
+init_ca_folders() {
     if [[ -d "$caPath" ]]; then
         echo "Cannot init new CA with existing filename. Aborting."
         exit 1
@@ -28,7 +28,7 @@ init_folders() {
     chmod 700 "${caPath}/private"
 }
 
-init_db() {
+init_ca_db() {
     cp /dev/null "${caPath}/db/${caName}.db"
     cp /dev/null "${caPath}/db/${caName}.db.attr"
     echo 01 > "${caPath}/db/${caName}.crt.srl"
@@ -203,8 +203,8 @@ rootca() {
 
     case "$action" in
         init)
-            init_folders 
-            init_db 
+            init_ca_folders 
+            init_ca_db 
             ;;
         request)
             gen_request 
@@ -243,8 +243,8 @@ subca() {
 
     case "$action" in
         init)
-            init_folders 
-            init_db 
+            init_ca_folders 
+            init_ca_db 
             ;;
         request)
             gen_request 
