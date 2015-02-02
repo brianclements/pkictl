@@ -37,7 +37,7 @@ init_ca_db() {
 
 init_import_folders() {
     if [[ ! -d "$importPath" ]]; then
-        mkdir -p "${importPath}/private" "${importPath}/certs"
+        mkdir -p "${importPath}/private" "${importPath}/certs" "${importPath}/tmp"
         chmod 770 "${importPath}/private"
     fi
 }
@@ -156,38 +156,64 @@ revoke_cert() {
 ## Import Commands
 ##############################################################################
 
-extract_chain() {
+extract_full_chain() {
     openssl pkcs12 \
         -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/${PKICTL_ORG}-${exportName}.chain.pem" \
+        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
         -nodes \
         -nokeys \
-        -cacerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 }
 
 extract_client_key() {
     openssl pkcs12 \
         -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/private/${PKICTL_ORG}-${exportName}.ee.key" \
+        -out "${importPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" \
+        -nodes \
+        -clcerts \
+        -nokeys \
+        -passin pass:"${PKICTL_PKCS12_PASS}"
+
+    declare privatePath="${importPath}/private"
+    declare exportKey="${PKICTL_ORG}-${exportName}.ee.key"
+
+    openssl pkcs12 \
+        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${privatePath}/${exportKey}" \
         -nodes \
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
-    chmod 770 "${importPath}/private/${PKICTL_ORG}-${exportName}.ee.key"
+
+    declare newName=$(openssl x509 -in "${importPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+    mv "${privatePath}/${exportKey}" "${privatePath}/${newName}.key"
+    chmod 770 "${privatePath}/${newName}.key"
 }
 
-extract_client_cert() {
+extract_intermediate_chain() {
     openssl pkcs12 \
         -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.ee.crt" \
+        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.intermediates.pem" \
         -nodes \
-        -clcerts \
+        -cacerts \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 }
 
 split_pem() {
-    cat ${PKICTL_ORG}-${exportName}.chain.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".crt"}'
+    cd "${PKICTL_ORG}/tmp"
+    cat .."/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
+        | awk \
+            -v prefix="${importPath}/$PKICTL_ORG/tmp" \
+            'split_after==1{n++;split_after=0}\
+            /-----END CERTIFICATE-----/\
+            {split_after=1}\
+            {print > "cert" n ".crt"}'
+    for cert in *; do
+        [[ -e "$cert" ]] || continue
+        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+        mv "$cert" .."/certs/${newName}.pem"
+    done
+    cd ..
 }
 
 ##############################################################################
@@ -362,9 +388,11 @@ eecert() {
             declare importPath="${PKICTL_IMPORT_DIR}/${PKICTL_ORG}"
             declare exportName="${requestLabel}"
             init_import_folders
-            extract_chain
+            extract_full_chain
             extract_client_key
-            extract_client_cert
+            extract_intermediate_chain
+            split_pem
+            rmdir tmp
             ;;
         help)
             display_usage_eecert
