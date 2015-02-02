@@ -8,12 +8,14 @@
 ##Requirements: openssl
 ##----------------
 
-# Tunable settings
+# CA settings
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used in *.conf files
 
 # Script settings
-export PKICTL_ROOT_DIR=${PKICTL_ROOT_DIR:-$PWD}
-export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-/etc/ssl}
+export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD}
+export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD}
+export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
+export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
 
 ##############################################################################
 ## Setup
@@ -36,9 +38,9 @@ init_ca_db() {
 }
 
 init_import_folders() {
-    if [[ ! -d "$importPath" ]]; then
-        mkdir -p "${importPath}/private" "${importPath}/certs" "${importPath}/tmp"
-        chmod 770 "${importPath}/private"
+    if [[ ! -d "$sslClientPath" ]]; then
+        mkdir -p "${sslClientPath}/private" "${sslClientPath}/certs" "${sslClientPath}/tmp"
+        chmod 770 "${sslClientPath}/private"
     fi
 }
 
@@ -158,8 +160,8 @@ revoke_cert() {
 
 extract_full_chain() {
     openssl pkcs12 \
-        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
+        -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
         -nodes \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
@@ -167,32 +169,33 @@ extract_full_chain() {
 
 extract_client_key() {
     openssl pkcs12 \
-        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" \
+        -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${sslClientPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" \
         -nodes \
         -clcerts \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
-    declare privatePath="${importPath}/private"
+    declare privatePath="${sslClientPath}/private"
     declare exportKey="${PKICTL_ORG}-${exportName}.ee.key"
 
     openssl pkcs12 \
-        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
+        -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
         -out "${privatePath}/${exportKey}" \
         -nodes \
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
-    declare newName=$(openssl x509 -in "${importPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+    declare newName=$(openssl x509 -in "${sslClientPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
     mv "${privatePath}/${exportKey}" "${privatePath}/${newName}.key"
     chmod 770 "${privatePath}/${newName}.key"
+    rm "${sslClientPath}/tmp/${PKICTL_ORG}-${exportName}.ee.crt"
 }
 
 extract_intermediate_chain() {
     openssl pkcs12 \
-        -in "${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${importPath}/certs/${PKICTL_ORG}-${exportName}.intermediates.pem" \
+        -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
+        -out "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.intermediates.pem" \
         -nodes \
         -cacerts \
         -nokeys \
@@ -200,10 +203,10 @@ extract_intermediate_chain() {
 }
 
 split_pem() {
-    cd "${PKICTL_ORG}/tmp"
-    cat .."/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
+    cd "${sslClientPath}/tmp"
+    cat "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
         | awk \
-            -v prefix="${importPath}/$PKICTL_ORG/tmp" \
+            -v prefix="${sslClientPath}/$PKICTL_ORG/tmp" \
             'split_after==1{n++;split_after=0}\
             /-----END CERTIFICATE-----/\
             {split_after=1}\
@@ -211,9 +214,8 @@ split_pem() {
     for cert in *; do
         [[ -e "$cert" ]] || continue
         declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
-        mv "$cert" .."/certs/${newName}.pem"
+        mv "$cert" "${sslClientPath}/certs/${newName}.pem"
     done
-    cd ..
 }
 
 ##############################################################################
@@ -224,8 +226,8 @@ rootca() {
     declare action="$1"
     declare caCertDepth="root"
     declare caName="${PKICTL_ORG}-${caCertDepth}.ca"
-    declare caPath="${PKICTL_ROOT_DIR}/${caName}"
-    declare conf="${PKICTL_ROOT_DIR}/${caName}.conf"
+    declare caPath="${PKICTL_CA_DIR}/${caName}"
+    declare conf="${PKICTL_CONFIG_DIR}/${caName}.conf"
 
     case "$action" in
         init)
@@ -264,8 +266,8 @@ subca() {
         display_usage_subca
     fi
     declare caName="${PKICTL_ORG}-${subCaLabel}.root.ca"
-    declare caPath="${PKICTL_ROOT_DIR}/${caName}"
-    declare conf="${PKICTL_ROOT_DIR}/${caName}.conf"
+    declare caPath="${PKICTL_CA_DIR}/${caName}"
+    declare conf="${PKICTL_CONFIG_DIR}/${caName}.conf"
 
     case "$action" in
         init)
@@ -281,9 +283,9 @@ subca() {
                 echo ""
                 display_usage_subca
             elif [[ "$signingCaLabel" == "root" ]]; then
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-root.ca.conf"
+                declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-root.ca.conf"
             else
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
+                declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             fi
             declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
@@ -299,10 +301,10 @@ subca() {
                 display_usage_subca
             elif [[ "$signingCaLabel" == "root" ]]; then
                 declare caName="${PKICTL_ORG}-root.ca"
-                declare parentCert="${PKICTL_ROOT_DIR}/${caName}/${caName}.crt"
+                declare parentCert="${PKICTL_CA_DIR}/${caName}/${caName}.crt"
             else
                 declare caName="${PKICTL_ORG}-${signingCaLabel}"
-                declare parentCert="${PKICTL_ROOT_DIR}/${caName}.root.ca/${caName}.chain.pem"
+                declare parentCert="${PKICTL_CA_DIR}/${caName}.root.ca/${caName}.chain.pem"
             fi
             declare subCert="${caPath}/${PKICTL_ORG}-${subCaLabel}.root.ca.crt"
             gen_pem
@@ -313,9 +315,9 @@ subca() {
                 echo ""
                 display_usage_subca
             elif [[ "$signingCaLabel" == "root" ]]; then
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.ca.conf"
+                declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.ca.conf"
             else
-                declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
+                declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             fi
             revoke_cert
             if [[ "$signingCaLabel" == "root" ]]; then
@@ -323,7 +325,7 @@ subca() {
             else
                 declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             fi
-            declare caPath="${PKICTL_ROOT_DIR}/${caName}"
+            declare caPath="${PKICTL_CA_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
             ;;
@@ -355,17 +357,17 @@ eecert() {
     declare csrName="${PKICTL_ORG}-${requestLabel}.root.ee"
     declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
     declare exportName="${PKICTL_ORG}-${outputLabel}.ee"
-    declare caPath="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
+    declare caPath="${PKICTL_CA_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
         request)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${requestLabel}.root.ee.conf"
+            declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${requestLabel}.root.ee.conf"
             gen_request 
             ;;
         sign)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
+            declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
@@ -377,22 +379,22 @@ eecert() {
             ;;
         revoke)
             eecert_arg_check
-            declare conf="${PKICTL_ROOT_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
+            declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             revoke_cert
             declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
-            declare caPath="${PKICTL_ROOT_DIR}/${caName}"
+            declare caPath="${PKICTL_CA_DIR}/${caName}"
             echo "Regenerating CRL..."
             gen_crl 
             ;;
         import)
-            declare importPath="${PKICTL_IMPORT_DIR}/${PKICTL_ORG}"
+            declare sslClientPath="${PKICTL_SSL_DIR}/${PKICTL_ORG}"
             declare exportName="${requestLabel}"
             init_import_folders
             extract_full_chain
             extract_client_key
             extract_intermediate_chain
             split_pem
-            rmdir tmp
+            rmdir "${sslClientPath}/tmp"
             ;;
         help)
             display_usage_eecert

@@ -8,14 +8,17 @@
 
 export PKICTL_CMD=${PKICTL_CMD:-../pkictl}
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}
+export PKICTL_CONFIG_DIR="$PWD/configs"
+export PKICTL_SSL_DIR="$PWD/client_ssl_dir"
 
 setup() {
     mkdir -p "$PKICTL_TEST_DIR"
-    cp configs/* "$PKICTL_TEST_DIR"
+    mkdir -p "$PKICTL_SSL_DIR"
 }
 
 cleanup() {
     rm -rf "$PKICTL_TEST_DIR"
+    rm -rf "$PKICTL_SSL_DIR"
 }
 
 test_rootca() {
@@ -81,6 +84,11 @@ test_eecert() {
     "$PKICTL_CMD" eecert sign testusername email.sub
     "$PKICTL_CMD" eecert genpkcs12 testusername email.sub userexportname
     "$PKICTL_CMD" eecert revoke testusername email.sub
+
+    echo ""
+    echo "importing userexportname client key/certs and chain..."
+    echo ""
+    declare PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname
 }
 
 main() {
@@ -88,14 +96,14 @@ main() {
     case "$1" in
         rootca)
             PKICTL_TEST_DIR="$PWD/rootca"
-            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             cleanup
             setup
             test_rootca
             ;;
         subca)
             PKICTL_TEST_DIR="$PWD/subca"
-            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             cleanup
             setup
             test_subca
@@ -103,6 +111,7 @@ main() {
         eecert)
             PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            export PKICTL_IMPORT_DIR="$PKICTL_TEST_DIR/$PKICTL_ORG-email.sub.root.ca"
             cleanup
             setup
             test_eecert
