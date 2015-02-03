@@ -95,28 +95,29 @@ main() {
     set -eo pipefail
     case "$1" in
         rootca)
-            PKICTL_TEST_DIR="$PWD/rootca"
+            declare PKICTL_TEST_DIR="$PWD/rootca"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             cleanup
             setup
             test_rootca
             ;;
         subca)
-            PKICTL_TEST_DIR="$PWD/subca"
+            declare PKICTL_TEST_DIR="$PWD/subca"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             cleanup
             setup
             test_subca
             ;;
         eecert)
-            PKICTL_TEST_DIR="$PWD/eecert"
-            export PKICTL_ROOT_DIR=$PKICTL_TEST_DIR
+            declare PKICTL_TEST_DIR="$PWD/eecert"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             export PKICTL_IMPORT_DIR="$PKICTL_TEST_DIR/$PKICTL_ORG-email.sub.root.ca"
             cleanup
             setup
             test_eecert
             ;;
         *)
+            echo "Specify a sub-command to test"
             ;;
     esac
 }
