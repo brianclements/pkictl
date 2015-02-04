@@ -431,8 +431,8 @@ Subcommands:    Actions:
                 [<signing CA label>]
 
     eecert
-                (request|sign|genpkcs12|revoke|help)
-                (<request label>|<end entity label>)
+                (request|sign|genpkcs12|revoke|import|help)
+                (<request label>|<end entity label>|<export name>)
                 <signing CA label>
                 [<output label>|<export name>]
 
@@ -508,7 +508,7 @@ EOF
 display_usage_eecert() {
     cat <<EOF
 Usage: pkictl eecert <action> 
-                              (<request label>|<end entity label>)
+                              (<request label>|<end entity label>|<export name>)
                               <signing CA label>
                               [<output label>|<export name>]
 
@@ -516,7 +516,8 @@ Create an end entity CSR, private key, certificate, and PKCS#12 bundle named
 <output label>, using configuration from <request label>, and sign with
 subordinate CA named <signing CA label>. Later, reference <end entity label> to
 choose what credentials to sign and package. Optionally, revoke issued end
-entity certificate <output label> with CA named <signing CA label>.
+entity certificate <output label> with CA named <signing CA label> or import
+PKCS#12 bundle named <export name>.
 
 Labeling Arguments:
 <request label> and <signing CA label> must be supplied on every action usage.
@@ -555,6 +556,11 @@ actions:
             Revoke issued certificate <end entity label> with CA <signing CA
             label> and automatically generate new CRL for <signing CA label>
             CA.
+
+    import <export name>
+            Take pkcs#12 file <export name> and extract the end entity
+            certificate, private key, and all intermediate CAs and install to
+            local ssl directory.
 EOF
     exit 1
 }
