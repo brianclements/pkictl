@@ -15,7 +15,22 @@ export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used 
 export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD}
 export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD}
 export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
+export PKICTL_CLIENTCERTS_DIR=${PKICTL_CLIENTCERTS_DIR:-/etc/ssl/certs}
 export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
+
+# OS settings
+export PKICTL_UPDATE_CERTS_CMD=$(command -v update-ca-certificates)
+
+# Depending on location and distro, certs need "pem" or "crt" suffix to be
+# recognized by update-ca-certificates
+case "$PKICTL_CLIENTCERTS_DIR" in
+    /etc/ssl/certs)
+        declare CERT_EXT="pem"
+        ;;
+    *)
+        declare CERT_EXT="crt"
+        ;;
+esac
 
 ##############################################################################
 ## Setup
@@ -213,8 +228,22 @@ split_pem() {
     for cert in *; do
         [[ -e "$cert" ]] || continue
         declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
-        mv "$cert" "${sslClientPath}/certs/${newName}.pem"
+        mv "$cert" "${sslClientPath}/certs/${newName}.${CERT_EXT}"
     done
+}
+
+install_certs() {
+    if [[ -d "${PKICTL_CLIENTCERTS_DIR}" ]]; then
+        for cert in "${sslClientPath}/certs/"*; do
+            [[ -e "$cert" ]] || continue
+            sudo ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+        done
+
+        sudo $PKICTL_UPDATE_CERTS_CMD
+    else 
+        echo "error: $PKICTL_CLIENTCERTS_DIR not found. This directory should already exist and be expected by the 'update-ca-certificates' command."
+        exit 1
+    fi
 }
 
 ##############################################################################
@@ -393,6 +422,7 @@ eecert() {
             extract_client_key
             extract_intermediate_chain
             split_pem
+            install_certs
             rmdir "${sslClientPath}/tmp"
             ;;
         help)
@@ -559,7 +589,8 @@ actions:
     import <export name>
             Take pkcs#12 file <export name> and extract the end entity
             certificate, private key, and all intermediate CAs and install to
-            local ssl directory.
+            configured ssl directory. This automatically will run
+            'update-ca-certificates' after to install the certificates.
 EOF
     exit 1
 }
