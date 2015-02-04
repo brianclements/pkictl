@@ -161,7 +161,7 @@ revoke_cert() {
 extract_full_chain() {
     openssl pkcs12 \
         -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
+        -out "${sslClientPath}/${PKICTL_ORG}-${exportName}.chain.pem" \
         -nodes \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
@@ -195,7 +195,7 @@ extract_client_key() {
 extract_intermediate_chain() {
     openssl pkcs12 \
         -in "${PKICTL_IMPORT_DIR}/${PKICTL_ORG}-${exportName}.ee.p12" \
-        -out "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.intermediates.pem" \
+        -out "${sslClientPath}/${PKICTL_ORG}-${exportName}.intermediates.pem" \
         -nodes \
         -cacerts \
         -nokeys \
@@ -204,9 +204,8 @@ extract_intermediate_chain() {
 
 split_pem() {
     cd "${sslClientPath}/tmp"
-    cat "${sslClientPath}/certs/${PKICTL_ORG}-${exportName}.chain.pem" \
+    cat "${sslClientPath}/${PKICTL_ORG}-${exportName}.chain.pem" \
         | awk \
-            -v prefix="${sslClientPath}/$PKICTL_ORG/tmp" \
             'split_after==1{n++;split_after=0}\
             /-----END CERTIFICATE-----/\
             {split_after=1}\
