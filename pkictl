@@ -3,8 +3,8 @@
 ##Name: pkictl
 ##Description: A biased controller script to aid in common openssl management
 ##             tasks
-##Date: 2015.01.20-12:46 
-##Version: 0.8.0-beta
+##Date: 2015.02.04-12:50
+##Version: 0.9.0-beta
 ##Requirements: openssl
 ##----------------
 
@@ -53,10 +53,8 @@ init_ca_db() {
 }
 
 init_import_folders() {
-    if [[ ! -d "$sslClientPath" ]]; then
-        mkdir -p "${sslClientPath}/private" "${sslClientPath}/certs" "${sslClientPath}/tmp"
-        chmod 770 "${sslClientPath}/private"
-    fi
+    mkdir -p "${sslClientPath}/private" "${sslClientPath}/certs" "${sslClientPath}/tmp"
+    chmod 770 "${sslClientPath}/private"
 }
 
 ##############################################################################
