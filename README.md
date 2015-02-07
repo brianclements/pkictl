@@ -209,12 +209,30 @@ of the PKI hierarchy:
 Issue and import end-entity certificates from the issuing/signing certificates at the
 bottom of the PKI hierarchy.
 
->`Usage: pkictl eecert <action> (<request label>|<end entity label>) <signing CA label> [<output label>|<export name>]`
+>`Usage: pkictl eecert <action> (<request label>|<end entity label>|<export name>) <signing CA label> [<output label>|<export name>]`
 
 * `pkictl eecert request node.tls.sub tls.sub somehostname.localnet`
 * `pkictl eecert sign somehostname.localnet tls.sub`
 * `pkictl eecert genpkcs12 somehostname.localnet tls.sub exportname.somehost.localnet`
 * `pkictl eecert revoke somehostname.localnet tls.sub`
+* `pkictl eecert import exportname.somehost.localnet`
+
+#### Import
+
+The `pkictl eecert import` sub-command takes the PKCS#12 bundle, extracts the
+certs and keys contained within, and imports them into logical and typical folder/file
+structures for various uses. The specific folder choices are highly configurable
+via environment variables and is designed with automation in mind. 
+
+The command will:
+
+* create a re-usable folder structure based on the value of "organizationName"
+  from the end entity certificate being imported.
+* create a full chain bundle file from root to end-entity for nginx style packaging
+* create a file of intermediate certificates for Apache style packaging
+* split out all certs into individual files and place into your OS's `ssl/certs` directory
+* extract private key
+* run `update-ca-certificates` for you to hash and import them.
 
 ## Sources
 
