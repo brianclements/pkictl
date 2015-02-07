@@ -159,7 +159,7 @@ gen_pkcs12() {
 }
 
 revoke_cert() {
-    declare PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
+    export PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
     declare revokeName=${csrName:-"$caName"}
     openssl ca \
         -config "$conf" \
@@ -268,8 +268,8 @@ rootca() {
             gen_request 
             ;;
         sign)
-            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
-            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-"root_ca_ext"}
+            export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-"root_ca_ext"}
             sign_root_ca_request 
             ;;
         gencrl)
@@ -317,8 +317,8 @@ subca() {
             else
                 declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             fi
-            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
-            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
+            export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
             ;;
         gencrl)
@@ -397,8 +397,8 @@ eecert() {
         sign)
             eecert_arg_check
             declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
-            declare PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
-            declare PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
+            export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
+            export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
             sign_request 
             ;;
         genpkcs12)
