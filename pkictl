@@ -186,35 +186,54 @@ extract_org_names() {
 }
 
 extract_full_chain() {
+    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
+    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-chain"
+    declare outFileSuffix="pem"
+    declare countMax=0
+    declare outFile=""
+    exist_check
     openssl pkcs12 \
-        -in "${PKICTL_IMPORT_DIR}/${exportName}.ee.p12" \
-        -out "${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-chain.pem" \
+        -in "$inFile" \
+        -out "$outFile" \
         -nodes \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
+    dupe_check
 }
 
 extract_client_key() {
-    declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee.key"
-
+    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
+    declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee"
+    declare outFileName="${sslClientPath}/private/${exportKey}"
+    declare outFileSuffix="key"
+    declare countMax=0
+    declare outFile=""
+    exist_check
     openssl pkcs12 \
-        -in "${PKICTL_IMPORT_DIR}/${exportName}.ee.p12" \
-        -out "${sslClientPath}/private/${exportKey}" \
+        -in "$inFile" \
+        -out "$outFile" \
         -nodes \
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
-
+    dupe_check
     chmod 770 "${sslClientPath}/private/${exportkey}"
 }
 
 extract_intermediate_chain() {
+    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
+    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-intermediates"
+    declare outFileSuffix="pem"
+    declare countMax=0
+    declare outFile=""
+    exist_check
     openssl pkcs12 \
-        -in "${PKICTL_IMPORT_DIR}/${exportName}.ee.p12" \
-        -out "${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-intermediates.pem" \
+        -in "$inFile" \
+        -out "$outFile" \
         -nodes \
         -cacerts \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
+    dupe_check
 }
 
 split_pem() {
@@ -228,8 +247,17 @@ split_pem() {
             {print > "cert" n ".crt"}'
     for cert in *; do
         [[ -e "$cert" ]] || continue
+
         declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
-        mv "$cert" "${sslClientPath}/certs/${newName}.${CERT_EXT}"
+
+        declare outFileName="${sslClientPath}/certs/${newName}"
+        declare outFileSuffix="${CERT_EXT}"
+        declare countMax=0
+        declare outFile=""
+
+        exist_check
+        mv "$cert" "${outFile}"
+        dupe_check
     done
     rmdir "${sslClientPath}/tmp"
 }
@@ -246,6 +274,64 @@ install_certs() {
         echo "error: $PKICTL_CLIENTCERTS_DIR not found. This directory should already exist and be expected by the 'update-ca-certificates' command."
         exit 1
     fi
+}
+
+exist_check() {
+    declare previousFileName="${outFileName}"
+    if [[ -f "${outFileName}.${outFileSuffix}" ]]; then
+        declare i=0
+        declare previousFileCounter=0
+        while [[ -f "${outFileName}.${i}.${outFileSuffix}" ]]; do
+            previousFileCounter="$i"
+            previousFileName="${outFileName}.${previousFileCounter}"
+            i=$((i + 1)) 
+        done
+        declare outFileNameCounter="${outFileName}.${i}"
+        countMax="$previousFileCounter"
+        previousFile="${previousFileName}.${outFileSuffix}"
+        outFile="${outFileNameCounter}.${outFileSuffix}"
+    else
+        previousFile="/dev/null"
+        outFile="${outFileName}.${outFileSuffix}"        
+    fi
+}
+
+dupe_check() {
+    declare i=$countMax
+    if [[ "$i" -eq -1 ]]; then
+        declare counterSuffix="${outFileSuffix}"
+    else
+        declare counterSuffix="${i}.${outFileSuffix}"
+    fi
+    while [[ -f "${outFileName}.${counterSuffix}" ]]; do
+        case "$outFileSuffix" in
+            crt)
+                previousFileFingerprint=$(openssl x509 -in "$previousFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                outFileFingerprint=$(openssl x509 -in "$outFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                if [[ "$previousFileFingerprint" == "$outFileFingerprint" ]]; then
+                    rm -rf "$outFile"
+                    break
+                fi
+                ;;
+            *)
+                previousFileMd5=$(md5sum "$previousFile" | awk '{print $1}')
+                outFileMd5=$(md5sum "$outFile" | awk '{print $1}')
+                if [[ "$previousFileMd5" == "$outFileMd5" ]]; then
+                    rm -rf "$outFile"
+                    break
+                fi
+                ;;
+        esac
+
+        i=$((i - 1)) 
+        counterSuffix="${i}.${outFileSuffix}"
+        if [[ "$i" -eq -1 ]]; then
+            counterSuffix="${outFileSuffix}"
+        elif [[ "$i" -lt 0 ]]; then
+            break
+        fi
+        previousFile="${outFileName}.${counterSuffix}"
+    done
 }
 
 ##############################################################################
