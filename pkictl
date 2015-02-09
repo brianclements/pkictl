@@ -264,10 +264,17 @@ split_pem() {
 
 install_certs() {
     if [[ -d "${PKICTL_CLIENTCERTS_DIR}" ]]; then
-        for cert in "${sslClientPath}/certs/"*; do
-            [[ -e "$cert" ]] || continue
-            sudo ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
-        done
+        if [[ -w "${PKICTL_CLIENTCERTS_DIR}" ]]; then
+            for cert in "${sslClientPath}/certs/"*; do
+                [[ -e "$cert" ]] || continue
+                ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+            done
+        else
+            for cert in "${sslClientPath}/certs/"*; do
+                [[ -e "$cert" ]] || continue
+                sudo ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+            done
+        fi
 
         sudo $PKICTL_UPDATE_CERTS_CMD
     else 
