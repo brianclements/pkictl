@@ -146,32 +146,37 @@ that which is already setup via configuration files. To use:
     However, some configuration is welcomed for certain items to allow for
     efficient use of configuration files.
 
-    1. `$PKICTL_ORG`: This sets "myorg.local" in the above examples. Must be the
-       same as the "organizationName" value in the openssl configuration file.
-    2. `$PKICTL_CONFIG_DIR`: defaults to `$PWD`, sets location of configuration
-       files.
-    3. `$PKICTL_CA_DIR`: defaults to `$PWD`, sets root location of your CA
-       directory. This is where all newly generated certs and keys go.
-    4. `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides with
-       where your operating system's OpenSSL installation stores its
-       certs/keys. It is where `pkictl eecert import` will install the directory
-       containing end-entity certs and private keys. The directory it will make
-       and use is `$PKICTL_SSL_DIR/$PKICTL_ORG`.
-    5. `$PKICTL_CLIENTCERTS_DIR`: defaults to `/etc/ssl/certs`, sets directory for
-       symlinking root/intermediate CA certs if your installation has an
-       alternative spot for imported certs (i.e.
-       `/usr/local/share/ca-certificates`). In other words, a location where
-       your installation's `update-ca-certificates` command can find your custom
-       certs and do it's hashing.
-    6. `$PKICTL_IMPORT_DIR`: defaults to `$PWD`, sets location of where to look
-       for PKCS#12 files for `pkictl eecert import` command.
-    7. `$PKICTL_PKCS12_PASS`: password used to open PKCS#12 file.
-    7. `$PKICTL_CA_EXTENSIONS`: set this prior to signing commands to select
-       alternate certificate extensions to include from your configuration file.
-       When unset, defaults from your configuration file are used.
-    8. `$PKICTL_CA_POLICY`: set this prior to signing commands to select
-       alterate distinguished name matching policies for signing your
-       certificate. When unset, defaults from your configuration file are used.
+    1. CA Settings
+        * `$PKICTL_ORG`: This sets "myorg.local" in the above examples. Must be
+          the same as the "organizationName" value in the openssl configuration
+          file.
+        * `$PKICTL_CONFIG_DIR`: defaults to `$PWD`, sets location of
+          configuration files.
+        * `$PKICTL_CA_DIR`: defaults to `$PWD`, sets root location of your CA
+          directory. This is where all newly generated certs and keys go.
+        * `$PKICTL_CA_EXTENSIONS`: set this prior to signing commands to select
+          alternate certificate extensions to include from your configuration
+          file.  When unset, defaults from your configuration file are used.
+        * `$PKICTL_CA_POLICY`: set this prior to signing commands to select
+          alterate distinguished name matching policies for signing your
+          certificate. When unset, defaults from your configuration file are
+          used.
+    2. PKCS#12 Import Settings
+        * `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides
+          with where your operating system's OpenSSL installation stores its
+          certs/keys. It is where `pkictl eecert import` will install the
+          directory containing end-entity certs and private keys. The
+          organization name is automatically extracted from the certificates
+          themselves and used as a subfolder under `/etc/ssl`.
+        * `$PKICTL_CLIENTCERTS_DIR`: defaults to `/etc/ssl/certs`, sets
+          directory for symlinking root/intermediate CA certs if your
+          installation has an alternative spot for imported certs (i.e.
+          `/usr/local/share/ca-certificates`). In other words, a location where
+          your installation's `update-ca-certificates` command can find your
+          custom certs and do it's hashing.
+        * `$PKICTL_IMPORT_DIR`: defaults to `$PWD`, sets location of where to
+          look for PKCS#12 files for `pkictl eecert import` command.
+        * `$PKICTL_PKCS12_PASS`: password used to open the PKCS#12 file.
 
 ## Usage
 
