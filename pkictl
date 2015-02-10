@@ -248,7 +248,7 @@ split_pem() {
     for cert in *; do
         [[ -e "$cert" ]] || continue
 
-        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/ /_/g')
 
         declare outFileName="${sslClientPath}/certs/${newName}"
         declare outFileSuffix="${CERT_EXT}"
