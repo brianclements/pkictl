@@ -155,7 +155,7 @@ gen_pkcs12() {
         -inkey "${caPath}/private/${csrName}.key" \
         -in "${caPath}/${csrName}.crt" \
         -certfile "${caPath}/${PKICTL_ORG}-${signingCaLabel}.chain.pem" \
-        -out "${caPath}/${exportName}.p12"
+        -out "${caPath}/${eeName}.ee.p12"
 }
 
 revoke_cert() {
@@ -478,7 +478,7 @@ eecert() {
     }
 
     declare csrName="${PKICTL_ORG}-${requestLabel}.root.ee"
-    declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
+    declare eeName="${outputLabel}"
     declare caPath="${PKICTL_CA_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
@@ -496,7 +496,6 @@ eecert() {
             ;;
         genpkcs12)
             eecert_arg_check
-            declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             gen_pkcs12
             ;;
         revoke)
