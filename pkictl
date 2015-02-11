@@ -173,21 +173,21 @@ revoke_cert() {
 
 extract_org_names() {
     openssl pkcs12 \
-        -in "${PKICTL_IMPORT_DIR}/${exportName}.ee.p12" \
-        -out "/tmp/${exportName}.ee.crt" \
+        -in "${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12" \
+        -out "/tmp/${importFileLabel}.ee.crt" \
         -nodes \
         -clcerts \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
-    export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${exportName}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}')
-    export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${exportName}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
-    rm "/tmp/${exportName}.ee.crt"
+    export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}')
+    export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+    rm "/tmp/${importFileLabel}.ee.crt"
 }
 
 extract_full_chain() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
-    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-chain"
+    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain"
     declare outFileSuffix="pem"
     declare countMax=0
     declare outFile=""
@@ -202,7 +202,7 @@ extract_full_chain() {
 }
 
 extract_client_key() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
+    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
     declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee"
     declare outFileName="${sslClientPath}/private/${exportKey}"
     declare outFileSuffix="key"
@@ -220,8 +220,8 @@ extract_client_key() {
 }
 
 extract_intermediate_chain() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${exportName}.ee.p12"
-    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-intermediates"
+    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-intermediates"
     declare outFileSuffix="pem"
     declare countMax=0
     declare outFile=""
@@ -239,7 +239,7 @@ extract_intermediate_chain() {
 split_pem() {
     mkdir "${sslClientPath}/tmp"
     cd "${sslClientPath}/tmp"
-    cat "${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${exportName}-chain.pem" \
+    cat "${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain.pem" \
         | awk \
             'split_after==1{n++;split_after=0}\
             /-----END CERTIFICATE-----/\
@@ -508,7 +508,7 @@ eecert() {
             gen_crl 
             ;;
         import)
-            declare exportName="${requestLabel}"
+            declare importFileLabel="${requestLabel}"
             extract_org_names
             declare sslClientPath="${PKICTL_SSL_DIR}/${PKICTL_IMPORT_ORG_NAME}"
             init_import_folders
