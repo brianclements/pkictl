@@ -478,7 +478,7 @@ eecert() {
     }
 
     declare csrName="${PKICTL_ORG}-${requestLabel}.root.ee"
-    declare eeName="${outputLabel}"
+    declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
     declare caPath="${PKICTL_CA_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
 
     case "$action" in
@@ -495,6 +495,7 @@ eecert() {
             sign_request 
             ;;
         genpkcs12)
+            declare eeName="${outputLabel}"
             eecert_arg_check
             gen_pkcs12
             ;;
