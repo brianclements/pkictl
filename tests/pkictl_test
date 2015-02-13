@@ -10,6 +10,7 @@ export PKICTL_CMD=${PKICTL_CMD:-../pkictl}
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}
 export PKICTL_CONFIG_DIR="$PWD/configs"
 export PKICTL_SSL_DIR="$PWD/client_ssl_dir"
+export PKICTL_CA_POLICY="policy_anything"
 
 setup() {
     mkdir -p "$PKICTL_TEST_DIR"
@@ -32,8 +33,6 @@ test_rootca() {
 }
 
 test_subca() {
-    test_rootca
-
     echo "#######################################"
     echo "running subca tests"
     echo ""
@@ -66,8 +65,6 @@ test_subca() {
 }
 
 test_eecert() {
-    test_subca
-
     echo "#######################################"
     echo "running eecert tests"
     echo ""
@@ -88,7 +85,7 @@ test_eecert() {
     echo ""
     echo "importing userexportname client key/certs and chain..."
     echo ""
-    declare PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname
+    PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname
 }
 
 main() {
@@ -105,19 +102,22 @@ main() {
             declare PKICTL_TEST_DIR="$PWD/subca"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
             cleanup
+            cp -r "$PWD/rootca" "$PWD/subca"
             setup
             test_subca
             ;;
         eecert)
             declare PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
-            export PKICTL_IMPORT_DIR="$PKICTL_TEST_DIR/$PKICTL_ORG-email.sub.root.ca"
-            cleanup
+            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca"
+            cp -r "$PWD/subca" "$PWD/eecert"
             setup
             test_eecert
             ;;
         *)
-            echo "Specify a sub-command to test"
+            echo "Specify a sub-command to test..."
+            echo "They are run in order and one at a time:"
+            echo "rootca, subca, eecert"
             ;;
     esac
 }
