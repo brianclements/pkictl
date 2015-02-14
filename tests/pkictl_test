@@ -82,10 +82,16 @@ test_eecert() {
     "$PKICTL_CMD" eecert genpkcs12 testusername email.sub userexportname
     "$PKICTL_CMD" eecert revoke testusername email.sub
 
+    "$PKICTL_CMD" eecert request user.email.sub email.sub
+    "$PKICTL_CMD" eecert sign user.email.sub email.sub
+    "$PKICTL_CMD" eecert genpkcs12 user.email.sub email.sub userexportname2
+    "$PKICTL_CMD" eecert revoke user.email.sub email.sub
+
     echo ""
     echo "importing userexportname client key/certs and chain..."
     echo ""
     PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname
+    PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname2
 }
 
 main() {
