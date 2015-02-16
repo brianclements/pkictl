@@ -82,16 +82,29 @@ test_eecert() {
     "$PKICTL_CMD" eecert genpkcs12 testusername email.sub userexportname
     "$PKICTL_CMD" eecert revoke testusername email.sub
 
+    echo ""
+    echo "testing default naming..."
+    echo ""
     "$PKICTL_CMD" eecert request user.email.sub email.sub
     "$PKICTL_CMD" eecert sign user.email.sub email.sub
     "$PKICTL_CMD" eecert genpkcs12 user.email.sub email.sub userexportname2
     "$PKICTL_CMD" eecert revoke user.email.sub email.sub
 
     echo ""
+    echo "testing duplicates..."
+    echo "make sure to make different common names then before"
+    echo ""
+    "$PKICTL_CMD" eecert request user.email.sub email.sub testusername_new
+    "$PKICTL_CMD" eecert sign testusername_new email.sub
+    "$PKICTL_CMD" eecert genpkcs12 testusername_new email.sub userexportname3
+    "$PKICTL_CMD" eecert revoke testusername_new email.sub
+
+    echo ""
     echo "importing userexportname client key/certs and chain..."
     echo ""
     PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname
     PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname2
+    PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname3
 }
 
 main() {
