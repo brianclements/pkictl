@@ -63,9 +63,14 @@ init_import_folders() {
 
 gen_request() {
     declare csrName=${eeName:-"$caName"}
+    if [[ "$isEecert" == true ]]; then
+        declare outCsr="${caPath}/export/${csrName}.csr"
+    else
+        declare outCsr="${caPath}/${csrName}.csr"
+    fi
     openssl req -new \
         -config "$conf" \
-        -out "${caPath}/${csrName}.csr" \
+        -out "$outCsr" \
         -keyout "${caPath}/private/${csrName}.key"
     chmod 700 "${caPath}/private/${csrName}.key"
 }
@@ -107,34 +112,41 @@ sign_root_ca_request() {
 sign_request() {
     declare csrName=${csrName:-"$caName"}
     declare outName=${csrName:-"$caName"}
+    if [[ "$isEecert" == true ]]; then
+        declare inCsr="${caPath}/export/${csrName}.csr"
+        declare outCrt="${caPath}/export/${outName}.crt"
+    else
+        declare inCsr="${caPath}/${csrName}.csr"
+        declare outCrt="${caPath}/${outName}.crt"
+    fi
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
-            -in "${caPath}/${csrName}.csr" \
-            -out "${caPath}/${outName}.crt"
+            -in "$inCsr" \
+            -out "$outCrt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
-            -in "${caPath}/${csrName}.csr" \
-            -out "${caPath}/${outName}.crt" \
+            -in "$inCsr" \
+            -out "$outCrt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
         openssl ca \
             -config "$conf" \
-            -in "${caPath}/${csrName}.csr" \
-            -out "${caPath}/${outName}.crt" \
+            -in "$inCsr" \
+            -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY"
     else
         openssl ca \
             -config "$conf" \
-            -in "${caPath}/${csrName}.csr" \
-            -out "${caPath}/${outName}.crt" \
+            -in "$inCsr" \
+            -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     fi
 
     if [[ "$?" -eq 0 ]]; then
-        rm "${caPath}/${csrName}.csr"
+        rm "$inCsr"
     fi
 }
 
@@ -150,20 +162,32 @@ gen_pem() {
 }
 
 gen_pkcs12() {
+    if [[ "$isEecert" == true ]]; then
+        declare inCrt="${caPath}/export/${csrName}.crt"
+        declare outP12="${caPath}/export/${eeName}.ee.p12"
+    else
+        declare inCrt="${caPath}/${csrName}.crt"
+        declare outP12="${caPath}/${eeName}.ee.p12"
+    fi
     openssl pkcs12 -export \
         -name "${outputLabel}" \
         -inkey "${caPath}/private/${csrName}.key" \
-        -in "${caPath}/${csrName}.crt" \
+        -in "$inCrt" \
         -certfile "${caPath}/${PKICTL_ORG}-${signingCaLabel}.chain.pem" \
-        -out "${caPath}/${eeName}.ee.p12"
+        -out "$outP12"
 }
 
 revoke_cert() {
     export PKICTL_CRL_REASON=${PKICTL_CRL_REASON:-"unspecified"}
     declare revokeName=${csrName:-"$caName"}
+    if [[ "$isEecert" == true ]]; then
+        declare revokeCrt="${caPath}/export/${revokeName}.crt"
+    else
+        declare revokeCrt="${caPath}/${revokeName}.crt"
+    fi
     openssl ca \
         -config "$conf" \
-        -revoke "${caPath}/${revokeName}.crt" \
+        -revoke "$revokeCrt" \
         -crl_reason "$PKICTL_CRL_REASON"
 }
 
@@ -173,7 +197,7 @@ revoke_cert() {
 
 extract_org_names() {
     openssl pkcs12 \
-        -in "${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12" \
+        -in "${PKICTL_IMPORT_DIR}/export/${importFileLabel}.ee.p12" \
         -out "/tmp/${importFileLabel}.ee.crt" \
         -nodes \
         -clcerts \
@@ -186,7 +210,7 @@ extract_org_names() {
 }
 
 extract_full_chain() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare inFile="${PKICTL_IMPORT_DIR}/export/${importFileLabel}.ee.p12"
     declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain"
     declare outFileSuffix="pem"
     declare countMax=0
@@ -202,7 +226,7 @@ extract_full_chain() {
 }
 
 extract_client_key() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare inFile="${PKICTL_IMPORT_DIR}/export/${importFileLabel}.ee.p12"
     declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee"
     declare outFileName="${sslClientPath}/private/${exportKey}"
     declare outFileSuffix="key"
@@ -220,7 +244,7 @@ extract_client_key() {
 }
 
 extract_intermediate_chain() {
-    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare inFile="${PKICTL_IMPORT_DIR}/export/${importFileLabel}.ee.p12"
     declare outFileName="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-intermediates"
     declare outFileSuffix="pem"
     declare countMax=0
@@ -480,6 +504,8 @@ eecert() {
     declare csrName="${PKICTL_ORG}-${requestLabel}.root.ee"
     declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
     declare caPath="${PKICTL_CA_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
+    declare isEecert=true
+    mkdir -p "${caPath}/export"
 
     case "$action" in
         request)
