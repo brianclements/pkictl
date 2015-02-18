@@ -128,7 +128,7 @@ main() {
         eecert)
             declare PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
-            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca"
+            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca/export"
             cp -r "$PWD/subca" "$PWD/eecert"
             setup
             test_eecert
