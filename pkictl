@@ -204,8 +204,8 @@ extract_org_names() {
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
-    export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}')
-    export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}')
+    export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+    export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
     rm "/tmp/${importFileLabel}.ee.crt"
 }
 
@@ -272,7 +272,7 @@ split_pem() {
     for cert in *; do
         [[ -e "$cert" ]] || continue
 
-        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/ /_/g')
+        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
 
         declare outFileName="${sslClientPath}/certs/${newName}"
         declare outFileSuffix="${CERT_EXT}"
