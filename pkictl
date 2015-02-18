@@ -505,16 +505,17 @@ eecert() {
     declare eeName="${PKICTL_ORG}-${outputLabel}.root.ee"
     declare caPath="${PKICTL_CA_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca"
     declare isEecert=true
-    mkdir -p "${caPath}/export"
 
     case "$action" in
         request)
             eecert_arg_check
+            mkdir -p "${caPath}/export"
             declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${requestLabel}.root.ee.conf"
             gen_request 
             ;;
         sign)
             eecert_arg_check
+            mkdir -p "${caPath}/export"
             declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
@@ -523,6 +524,7 @@ eecert() {
         genpkcs12)
             declare eeName="${outputLabel}"
             eecert_arg_check
+            mkdir -p "${caPath}/export"
             gen_pkcs12
             ;;
         revoke)
