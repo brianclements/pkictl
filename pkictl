@@ -20,6 +20,8 @@ export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
 
 # OS settings
 export PKICTL_UPDATE_CERTS_CMD=$(command -v update-ca-certificates)
+export PKICTL_IMPORT_GROUP=${PKICTL_IMPORT_GROUP:-"ssl-cert"}
+export PKICTL_IMPORT_USER=${PKICTL_IMPORT_USER:-"root"}
 
 # Depending on location and distro, certs need "pem" or "crt" suffix to be
 # recognized by update-ca-certificates
@@ -53,8 +55,13 @@ init_ca_db() {
 }
 
 init_import_folders() {
-    mkdir -p "${sslClientPath}/private" "${sslClientPath}/certs"
-    chmod 770 "${sslClientPath}/private"
+    mkdir -p \
+        "${sslClientPath}/certs" \
+    mkdir -p -m 710 \
+        "${sslClientPath}/private" \
+        "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
+    sudo chown root:ssl-cert "${sslClientPath}/private"
+    sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
 }
 
 ##############################################################################
@@ -228,7 +235,7 @@ extract_full_chain() {
 extract_client_key() {
     declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
     declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee"
-    declare outFileName="${sslClientPath}/private/${exportKey}"
+    declare outFileName="${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}"
     declare outFileSuffix="key"
     declare countMax=0
     declare outFile=""
@@ -240,7 +247,8 @@ extract_client_key() {
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
     dupe_check
-    chmod 770 "${sslClientPath}/private/${exportkey}"
+    sudo chmod 640 "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
+    sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
 }
 
 extract_intermediate_chain() {
@@ -363,6 +371,27 @@ dupe_check() {
         fi
         previousFile="${outFileName}.${counterSuffix}"
     done
+}
+
+pkey_group_prep() {
+    if [[ $(getent group ssl-cert) ]]; then
+        echo "System group 'ssl-cert' already exists, continuing..."
+    else
+        sudo groupadd --system ssl-cert &&\
+            echo "Created system group 'ssl-cert'"
+    fi
+    if [[ ! $(getent group "$PKICTL_IMPORT_GROUP") ]]; then
+        echo "Error: group $PKICTL_IMPORT_GROUP doesn't exist."
+        echo "Make sure this system is configured with this group first."
+        exit 1
+    elif [[ ! $(id -u "$PKICTL_IMPORT_USER") ]]; then
+        echo "Error: user $PKICTL_IMPORT_USER doesn't exist."
+        echo "Make sure this system is configured with this user first."
+        exit 1
+    elif [[ ! "$PKICTL_IMPORT_USER" == "root" ]]; then
+        sudo usermod -a -G ssl-cert "$PKICTL_IMPORT_USER" &&\
+        echo "User $PKICTL_IMPORT_USER added to group 'ssl-cert'"
+    fi
 }
 
 ##############################################################################
@@ -540,6 +569,7 @@ eecert() {
             declare importFileLabel="${requestLabel}"
             extract_org_names
             declare sslClientPath="${PKICTL_SSL_DIR}/${PKICTL_IMPORT_ORG_NAME}"
+            pkey_group_prep
             init_import_folders
             extract_full_chain
             extract_client_key
