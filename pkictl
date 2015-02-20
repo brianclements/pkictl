@@ -56,7 +56,7 @@ init_ca_db() {
 
 init_import_folders() {
     mkdir -p \
-        "${sslClientPath}/certs" \
+        "${sslClientPath}/certs"
     mkdir -p -m 710 \
         "${sslClientPath}/private" \
         "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
