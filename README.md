@@ -184,6 +184,12 @@ that which is already setup via configuration files. To use:
           members of the group `$PKICTL_IMPORT_GROUP` can actually access the
           private key itself as it will be in it's own subdirectory. See the
           "Import" section below for details.
+    3. Misc. Settings
+        * `$PKICTL_SAFE_TEST`: When set to 'true', all tasks that involve sudo,
+          chown, or chmod with root or other system users/groups are skipped or
+          run as current user instead with a notification message to alert user
+          to what was not performed. This is for testing both manually and with
+          the pkictl_test script.
 
 ## Usage
 
