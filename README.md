@@ -177,6 +177,13 @@ that which is already setup via configuration files. To use:
         * `$PKICTL_IMPORT_DIR`: defaults to `$PWD`, sets location of where to
           look for PKCS#12 files for `pkictl eecert import` command.
         * `$PKICTL_PKCS12_PASS`: password used to open the PKCS#12 file.
+        * `$PKICTL_IMPORT_GROUP`: group which will have RO access to newly
+          imported private key. Defaults to 'ssl-cert'.
+        * `$PKICTL_IMPORT_USER`: user which will be added to group 'ssl-cert' so
+          that they can access the private key folder in general. However, only
+          members of the group `$PKICTL_IMPORT_GROUP` can actually access the
+          private key itself as it will be in it's own subdirectory. See the
+          "Import" section below for details.
 
 ## Usage
 
@@ -239,6 +246,34 @@ The command will:
 * extract private key
 * run `update-ca-certificates` for you to hash and import them.
 
+File permissions and ownership of private keys are a tricky, but critically
+important thing. A hybrid solution of best practices have been used here to
+allow for a pretty durable workflow when importing keys. A single server could
+potentially have multiple certificates and private keys for various programs.
+They should all be segregated by program and use-case.
+
+ 1. First, we make sure a system user named 'ssl-cert' exists.
+ 2. Only members of that group can even access the private key folder, which is
+    710 root:ssl-cert by default.
+ 3. We then make a sub-folder in the private folder named
+    `$PKICTL_IMPORT_GROUP`. So a default folder of `./private/ssl-cert` will be
+    710 root:ssl-cert and the keys within it will be 640 root:ssl-cert.
+ 4. During subsequent import processes, if `pkictl eecert import` is run with
+    env var `PKICTL_IMPORT_GROUP=my-prog`, then new subfolder is created such as
+    `./private/my-prog` with 710 root:my-prog and the keys within are 640
+    root:my-prog.
+ 5. Users/groups won't be created, but will be checked before trying to chown
+    things. User creation should be handle by the process that needs to act as
+    that user. The script will fail if they don't exist.
+ 6. All imported keys will default to ssl-cert, and thus be stored in that
+    folder under that group. This is a great default, but also allows other
+    programs to create their own folders with their own groups. The key
+    segregation visually reflects the user/group segregation.
+    Groups/programs/users only have access to the keys meant for them and them
+    only.
+ 7. A purely `./private/root` folder with root:root keys can also be made to
+    work as well in this usage pattern for mail and web servers.
+    
 ## Sources
 
 * Official Sources
