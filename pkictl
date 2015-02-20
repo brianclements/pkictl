@@ -17,6 +17,7 @@ export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD}
 export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
 export PKICTL_CLIENTCERTS_DIR=${PKICTL_CLIENTCERTS_DIR:-/etc/ssl/certs}
 export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
+export PKICTL_SAFE_TEST=${PKICTL_SAFE_TEST:-"false"}
 
 # OS settings
 export PKICTL_UPDATE_CERTS_CMD=$(command -v update-ca-certificates)
@@ -60,8 +61,12 @@ init_import_folders() {
     mkdir -p -m 710 \
         "${sslClientPath}/private" \
         "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
-    sudo chown root:ssl-cert "${sslClientPath}/private"
-    sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
+    if [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
+        sudo chown root:ssl-cert "${sslClientPath}/private"
+        sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}"
+    else
+        echo "test mode enabled: skipped change ownership of private key folders."
+    fi
 }
 
 ##############################################################################
@@ -247,8 +252,13 @@ extract_client_key() {
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
     dupe_check
-    sudo chmod 640 "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
-    sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
+    if [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
+        sudo chmod 640 "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
+        sudo chown root:"${PKICTL_IMPORT_GROUP}" "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
+    else
+        chmod 640 "${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}.${outFileSuffix}"
+        echo "test mode enabled: skipped change ownership of private key."
+    fi
 }
 
 extract_intermediate_chain() {
@@ -304,11 +314,20 @@ install_certs() {
         else
             for cert in "${sslClientPath}/certs/"*; do
                 [[ -e "$cert" ]] || continue
-                sudo ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+                if [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
+                    sudo ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+                else
+                    ln -sf "$cert" "${PKICTL_CLIENTCERTS_DIR}"
+                    echo "test mode enabled: symlinked certs made as current user"
+                fi
             done
         fi
 
-        sudo $PKICTL_UPDATE_CERTS_CMD
+        if [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
+            sudo $PKICTL_UPDATE_CERTS_CMD
+        else
+            echo "test mode enabled: skipped 'update-ca-certificates'"
+        fi
     else 
         echo "error: $PKICTL_CLIENTCERTS_DIR not found. This directory should already exist and be expected by the 'update-ca-certificates' command."
         exit 1
@@ -376,9 +395,11 @@ dupe_check() {
 pkey_group_prep() {
     if [[ $(getent group ssl-cert) ]]; then
         echo "System group 'ssl-cert' already exists, continuing..."
-    else
+    elif [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
         sudo groupadd --system ssl-cert &&\
             echo "Created system group 'ssl-cert'"
+    else
+        echo "test mode enabled: skipped creation of group 'ssl-cert'"
     fi
     if [[ ! $(getent group "$PKICTL_IMPORT_GROUP") ]]; then
         echo "Error: group $PKICTL_IMPORT_GROUP doesn't exist."
@@ -388,7 +409,7 @@ pkey_group_prep() {
         echo "Error: user $PKICTL_IMPORT_USER doesn't exist."
         echo "Make sure this system is configured with this user first."
         exit 1
-    elif [[ ! "$PKICTL_IMPORT_USER" == "root" ]]; then
+    elif [[ ! "$PKICTL_IMPORT_USER" == "root" ]] && [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
         sudo usermod -a -G ssl-cert "$PKICTL_IMPORT_USER" &&\
         echo "User $PKICTL_IMPORT_USER added to group 'ssl-cert'"
     fi
