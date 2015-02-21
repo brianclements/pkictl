@@ -234,6 +234,7 @@ extract_full_chain() {
         -nodes \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
+    strip_headers "$outFile"
     dupe_check
 }
 
@@ -251,7 +252,6 @@ extract_client_key() {
         -nodes \
         -nocerts \
         -passin pass:"${PKICTL_PKCS12_PASS}"
-    dupe_check
     if [[ "$PKICTL_SAFE_TEST" == "false" ]]; then
         sudo chmod 640 "$outFile"
         sudo chown root:"${PKICTL_IMPORT_GROUP}" "$outFile"
@@ -259,6 +259,8 @@ extract_client_key() {
         chmod 640 "$outFile"
         echo "test mode enabled: skipped change ownership of private key."
     fi
+    strip_headers "$outFile"
+    dupe_check
 }
 
 extract_intermediate_chain() {
@@ -275,13 +277,16 @@ extract_intermediate_chain() {
         -cacerts \
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
+    strip_headers "$outFile"
     dupe_check
 }
 
 split_pem() {
     mkdir "${sslClientPath}/tmp"
     cd "${sslClientPath}/tmp"
-    cat "${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain.pem" \
+    declare chainFile="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain.pem"
+    strip_headers "$chainFile"
+    cat "$chainFile" \
         | awk \
             'split_after==1{n++;split_after=0}\
             /-----END CERTIFICATE-----/\
@@ -413,6 +418,14 @@ pkey_group_prep() {
         sudo usermod -a -G ssl-cert "$PKICTL_IMPORT_USER" &&\
         echo "User $PKICTL_IMPORT_USER added to group 'ssl-cert'"
     fi
+}
+
+strip_headers() {
+    declare stripFile="$1"
+    # Remove top header
+    sed -i '0,/^-----BEGIN/{//!d}' $stripFile
+    # Remove inner headers
+    sed -i '/^-----END/,/^-----BEGIN/{//!d}' $stripFile
 }
 
 ##############################################################################
