@@ -99,7 +99,11 @@ test_eecert() {
     "$PKICTL_CMD" eecert sign testusername_new email.sub
     "$PKICTL_CMD" eecert genpkcs12 testusername_new email.sub userexportname3
     "$PKICTL_CMD" eecert revoke testusername_new email.sub
+}
 
+test_eecert_import(){
+    echo "#######################################"
+    echo "running eecert import tests"
     echo ""
     echo "importing userexportname client key/certs and chain..."
     echo ""
@@ -133,11 +137,16 @@ main() {
             cp -r "$PWD/subca" "$PWD/eecert"
             setup
             test_eecert
+        eecert-import)
+            declare PKICTL_TEST_DIR="$PWD/eecert"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca/export"
+            test_eecert_import
             ;;
         *)
             echo "Specify a sub-command to test..."
             echo "They are run in order and one at a time:"
-            echo "rootca, subca, eecert"
+            echo "rootca, subca, eecert, eecert-import"
             ;;
     esac
 }
