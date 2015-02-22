@@ -11,6 +11,7 @@ export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}
 export PKICTL_CONFIG_DIR="$PWD/configs"
 export PKICTL_SSL_DIR="$PWD/client_ssl_dir"
 export PKICTL_CA_POLICY="policy_anything"
+export PKICTL_SAFE_TEST="true"
 
 setup() {
     mkdir -p "$PKICTL_TEST_DIR"
