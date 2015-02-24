@@ -279,6 +279,7 @@ extract_intermediate_chain() {
         -passin pass:"${PKICTL_PKCS12_PASS}"
     strip_headers "$outFile"
     dupe_check
+    intermediate_dupe_check
 }
 
 split_pem() {
@@ -394,6 +395,23 @@ dupe_check() {
             break
         fi
         previousFile="${outFileName}.${counterSuffix}"
+    done
+}
+
+intermediate_dupe_check(){
+    declare checkFile=""
+    if [[ "$previousFile" == "/dev/null" ]]; then
+        checkFile=$outFile
+    else
+        checkFile=$previousFile
+    fi
+    declare checkFileMd5=$(md5sum "$checkFile" | awk '{print $1}')
+    for i_cert in "${sslClientPath}"/*intermediates*; do
+        [[ -e "$i_cert" ]] && [[ ! "$i_cert" == "$checkFile" ]] || continue
+        declare i_certMd5=$(md5sum "$i_cert" | awk '{print $1}')
+        if [[ "$i_certMd5" == "$checkFileMd5" ]]; then
+            rm -rf "$checkFile"
+        fi
     done
 }
 
