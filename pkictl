@@ -217,7 +217,7 @@ extract_org_names() {
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
     export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
-    export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+    # export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
     rm "/tmp/${importFileLabel}.ee.crt"
 }
 
@@ -238,9 +238,9 @@ extract_full_chain() {
     dupe_check
 }
 
-extract_client_key() {
+extract_ee_key() {
     declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
-    declare exportKey="${PKICTL_IMPORT_ORG_NAME}-${PKICTL_IMPORT_COMMON_NAME}.ee"
+    declare exportKey="${importFileLabel}.ee"
     declare outFileName="${sslClientPath}/private/${PKICTL_IMPORT_GROUP}/${exportKey}"
     declare outFileSuffix="key"
     declare countMax=0
@@ -259,6 +259,24 @@ extract_client_key() {
         chmod 640 "$outFile"
         echo "test mode enabled: skipped change ownership of private key."
     fi
+    strip_headers "$outFile"
+    dupe_check
+}
+
+extract_ee_cert(){
+    declare inFile="${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12"
+    declare outFileName="${sslClientPath}/certs/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}"
+    declare outFileSuffix="crt"
+    declare countMax=0
+    declare outFile=""
+    exist_check
+    openssl pkcs12 \
+        -in "$inFile" \
+        -out "$outFile" \
+        -nodes \
+        -clcerts \
+        -nokeys \
+        -passin pass:"${PKICTL_PKCS12_PASS}"
     strip_headers "$outFile"
     dupe_check
 }
@@ -283,31 +301,33 @@ extract_intermediate_chain() {
 }
 
 split_pem() {
-    mkdir "${sslClientPath}/tmp"
-    cd "${sslClientPath}/tmp"
-    declare chainFile="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-chain.pem"
-    strip_headers "$chainFile"
-    cat "$chainFile" \
-        | awk \
-            'split_after==1{n++;split_after=0}\
-            /-----END CERTIFICATE-----/\
-            {split_after=1}\
-            {print > "cert" n ".crt"}'
-    for cert in *; do
-        [[ -e "$cert" ]] || continue
+    declare chainFile="${sslClientPath}/${PKICTL_IMPORT_ORG_NAME}-${importFileLabel}-intermediates.pem"
+    if [[ -e "$chainFile" ]]; then
+        mkdir "${sslClientPath}/tmp"
+        cd "${sslClientPath}/tmp"
+        strip_headers "$chainFile"
+        cat "$chainFile" \
+            | awk \
+                'split_after==1{n++;split_after=0}\
+                /-----END CERTIFICATE-----/\
+                {split_after=1}\
+                {print > "cert" n ".crt"}'
+        for cert in *; do
+            [[ -e "$cert" ]] || continue
 
-        declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+            declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
 
-        declare outFileName="${sslClientPath}/certs/${newName}"
-        declare outFileSuffix="${CERT_EXT}"
-        declare countMax=0
-        declare outFile=""
+            declare outFileName="${sslClientPath}/certs/${newName}"
+            declare outFileSuffix="${CERT_EXT}"
+            declare countMax=0
+            declare outFile=""
 
-        exist_check
-        mv "$cert" "${outFile}"
-        dupe_check
-    done
-    rmdir "${sslClientPath}/tmp"
+            exist_check
+            mv "$cert" "${outFile}"
+            dupe_check
+        done
+        rmdir "${sslClientPath}/tmp"
+    fi
 }
 
 install_certs() {
@@ -624,7 +644,8 @@ eecert() {
             pkey_group_prep
             init_import_folders
             extract_full_chain
-            extract_client_key
+            extract_ee_key
+            extract_ee_cert
             extract_intermediate_chain
             split_pem
             install_certs
