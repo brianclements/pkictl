@@ -78,10 +78,10 @@ Remember that `pkictl` does not do any configuring itself, it merely initiates
 that which is already setup via configuration files. To use:
 
 1. Plan out your PKI first.
-    1. Two very important OpenSSL configuration settings are `keyUsage`,
-       `basicConstraints`. These are not general purpose and need to be specific
-       to your PKI design in order for security policies to be enforced
-       properly. This is why design must be pre-planned.
+    1. The three most important OpenSSL configuration settings are `keyUsage`,
+       `basicConstraints`, and `extendedKeyUsage`. These are not general purpose
+       and need to be specific to your PKI design in order for security policies
+       to be enforced properly. This is why design must be pre-planned.
 2. Modify the configuration files to match your design.
     1. Parity between the naming of the configuration files and all the openssl
        output must be preserved. This is how the script can sign certificates
@@ -101,7 +101,7 @@ that which is already setup via configuration files. To use:
           certificates.
         * `<artifact suffix>`: determined by file type. ".csr", ".key", ".crt",
           ".crl", ".conf", etc. 
-        * `<artifact file format>`: if <artifact suffix> is supplied only,
+        * `<artifact file format>`: if `<artifact suffix>` is supplied only,
           assume "PEM" ASCII format. When "DER" format is used, this suffix will
           be appended to the filename.
 
@@ -146,7 +146,7 @@ that which is already setup via configuration files. To use:
     However, some configuration is welcomed for certain items to allow for
     efficient use of configuration files.
 
-    1. CA Settings
+    * CA Settings
         * `$PKICTL_ORG`: This sets "myorg.local" in the above examples. Must be
           the same as the "organizationName" value in the openssl configuration
           file.
@@ -158,10 +158,10 @@ that which is already setup via configuration files. To use:
           alternate certificate extensions to include from your configuration
           file.  When unset, defaults from your configuration file are used.
         * `$PKICTL_CA_POLICY`: set this prior to signing commands to select
-          alterate distinguished name matching policies for signing your
+          alternate distinguished name matching policies for signing your
           certificate. When unset, defaults from your configuration file are
           used.
-    2. PKCS#12 Import Settings
+    * PKCS#12 Import Settings
         * `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides
           with where your operating system's OpenSSL installation stores its
           certs/keys. It is where `pkictl eecert import` will install the
@@ -184,7 +184,7 @@ that which is already setup via configuration files. To use:
           members of the group `$PKICTL_IMPORT_GROUP` can actually access the
           private key itself as it will be in it's own subdirectory. See the
           "Import" section below for details.
-    3. Misc. Settings
+    * Misc. Settings
         * `$PKICTL_SAFE_TEST`: When set to 'true', all tasks that involve sudo,
           chown, or chmod with root or other system users/groups are skipped or
           run as current user instead with a notification message to alert user
@@ -258,15 +258,16 @@ allow for a pretty durable workflow when importing keys. A single server could
 potentially have multiple certificates and private keys for various programs.
 They should all be segregated by program and use-case.
 
- 1. First, we make sure a system user named 'ssl-cert' exists.
- 2. Only members of that group can even access the private key folder, which is
-    710 root:ssl-cert by default.
+ 1. First, we make sure a system group named 'ssl-cert' exists.
+ 2. Only members of that group can even access the private key folder (at
+    `/etc/ssl/Myorg/private` for example), which is 710 root:ssl-cert by
+    default.
  3. We then make a sub-folder in the private folder named
-    `$PKICTL_IMPORT_GROUP`. So a default folder of `./private/ssl-cert` will be
+    `$PKICTL_IMPORT_GROUP`. So a default folder of `private/ssl-cert` will be
     710 root:ssl-cert and the keys within it will be 640 root:ssl-cert.
  4. During subsequent import processes, if `pkictl eecert import` is run with
     env var `PKICTL_IMPORT_GROUP=my-prog`, then new subfolder is created such as
-    `./private/my-prog` with 710 root:my-prog and the keys within are 640
+    `private/my-prog` with 710 root:my-prog and the keys within are 640
     root:my-prog.
  5. Users/groups won't be created, but will be checked before trying to chown
     things. User creation should be handle by the process that needs to act as
@@ -277,8 +278,9 @@ They should all be segregated by program and use-case.
     segregation visually reflects the user/group segregation.
     Groups/programs/users only have access to the keys meant for them and them
     only.
- 7. A purely `./private/root` folder with root:root keys can also be made to
-    work as well in this usage pattern for mail and web servers.
+ 7. A purely `private/root` folder with root:root keys can also be made to
+    work as well in this usage pattern for mail and web servers that start as
+    root first, then drop privileges later.
     
 ## Sources
 
