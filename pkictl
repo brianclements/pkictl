@@ -390,16 +390,16 @@ dupe_check() {
     while [[ -f "${outFileName}.${counterSuffix}" ]]; do
         case "$outFileSuffix" in
             crt)
-                previousFileFingerprint=$(openssl x509 -in "$previousFile" -noout -fingerprint | awk -F '=' '{print $2}')
-                outFileFingerprint=$(openssl x509 -in "$outFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                declare previousFileFingerprint=$(openssl x509 -in "$previousFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                declare outFileFingerprint=$(openssl x509 -in "$outFile" -noout -fingerprint | awk -F '=' '{print $2}')
                 if [[ "$previousFileFingerprint" == "$outFileFingerprint" ]]; then
                     rm -rf "$outFile"
                     break
                 fi
                 ;;
             *)
-                previousFileMd5=$(md5sum "$previousFile" | awk '{print $1}')
-                outFileMd5=$(md5sum "$outFile" | awk '{print $1}')
+                declare previousFileMd5=$(md5sum "$previousFile" | awk '{print $1}')
+                declare outFileMd5=$(md5sum "$outFile" | awk '{print $1}')
                 if [[ "$previousFileMd5" == "$outFileMd5" ]]; then
                     rm -rf "$outFile"
                     break
