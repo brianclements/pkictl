@@ -51,7 +51,6 @@ init_ca_folders() {
 init_ca_db() {
     cp /dev/null "${caPath}/db/${caName}.db"
     cp /dev/null "${caPath}/db/${caName}.db.attr"
-    echo 01 > "${caPath}/db/${caName}.crt.srl"
     echo 01 > "${caPath}/db/${caName}.crl.srl"
 }
 
@@ -92,23 +91,27 @@ sign_root_ca_request() {
     declare outName="$caName"
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca -selfsign \
+            -create_serial \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca -selfsign \
+            -create_serial \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
         openssl ca -selfsign \
+            -create_serial \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -policy "$PKICTL_CA_POLICY"
     else
         openssl ca -selfsign \
+            -create_serial \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
@@ -133,23 +136,27 @@ sign_request() {
     fi
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
+            -create_serial \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
+            -create_serial \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
         openssl ca \
+            -create_serial \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY"
     else
         openssl ca \
+            -create_serial \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
