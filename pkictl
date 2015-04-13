@@ -3,10 +3,13 @@
 ##Name: pkictl
 ##Description: A biased controller script to aid in common openssl management
 ##             tasks
-##Date: 2015.03.02-00:03 
+##Date: 2015.03.02-00:03
 ##Version: 0.10.0-beta
 ##Requirements: openssl
 ##----------------
+
+# Binary settings
+export OPENSSL_BIN=${OPENSSL_BIN:-"openssl"}
 
 # CA settings
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used in *.conf files
@@ -80,7 +83,7 @@ gen_request() {
     else
         declare outCsr="${caPath}/${csrName}.csr"
     fi
-    openssl req -new \
+    $OPENSSL_BIN req -new \
         -config "$conf" \
         -out "$outCsr" \
         -keyout "${caPath}/private/${csrName}.key"
@@ -91,24 +94,24 @@ sign_root_ca_request() {
     declare csrName="$caName"
     declare outName="$caName"
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        openssl ca -selfsign \
+        $OPENSSL_BIN ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        openssl ca -selfsign \
+        $OPENSSL_BIN ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        openssl ca -selfsign \
+        $OPENSSL_BIN ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        openssl ca -selfsign \
+        $OPENSSL_BIN ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
@@ -132,24 +135,24 @@ sign_request() {
         declare outCrt="${caPath}/${outName}.crt"
     fi
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        openssl ca \
+        $OPENSSL_BIN ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        openssl ca \
+        $OPENSSL_BIN ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        openssl ca \
+        $OPENSSL_BIN ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        openssl ca \
+        $OPENSSL_BIN ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
@@ -163,7 +166,7 @@ sign_request() {
 }
 
 gen_crl() {
-    openssl ca -gencrl \
+    $OPENSSL_BIN ca -gencrl \
         -config "$conf" \
         -out "${caPath}/crl/${caName}.crl"
 }
@@ -181,7 +184,7 @@ gen_pkcs12() {
         declare inCrt="${caPath}/${csrName}.crt"
         declare outP12="${caPath}/${eeName}.ee.p12"
     fi
-    openssl pkcs12 -export \
+    $OPENSSL_BIN pkcs12 -export \
         -name "${outputLabel}" \
         -inkey "${caPath}/private/${csrName}.key" \
         -in "$inCrt" \
@@ -197,7 +200,7 @@ revoke_cert() {
     else
         declare revokeCrt="${caPath}/${revokeName}.crt"
     fi
-    openssl ca \
+    $OPENSSL_BIN ca \
         -config "$conf" \
         -revoke "$revokeCrt" \
         -crl_reason "$PKICTL_CRL_REASON"
@@ -208,7 +211,7 @@ revoke_cert() {
 ##############################################################################
 
 extract_org_names() {
-    openssl pkcs12 \
+    $OPENSSL_BIN pkcs12 \
         -in "${PKICTL_IMPORT_DIR}/${importFileLabel}.ee.p12" \
         -out "/tmp/${importFileLabel}.ee.crt" \
         -nodes \
@@ -216,8 +219,8 @@ extract_org_names() {
         -nokeys \
         -passin pass:"${PKICTL_PKCS12_PASS}"
 
-    export PKICTL_IMPORT_ORG_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
-    # export PKICTL_IMPORT_COMMON_NAME=$(openssl x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+    export PKICTL_IMPORT_ORG_NAME=$($OPENSSL_BIN x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'O=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+    # export PKICTL_IMPORT_COMMON_NAME=$($OPENSSL_BIN x509 -in "/tmp/${importFileLabel}.ee.crt" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
     rm "/tmp/${importFileLabel}.ee.crt"
 }
 
@@ -228,7 +231,7 @@ extract_full_chain() {
     declare countMax=0
     declare outFile=""
     exist_check
-    openssl pkcs12 \
+    $OPENSSL_BIN pkcs12 \
         -in "$inFile" \
         -out "$outFile" \
         -nodes \
@@ -246,7 +249,7 @@ extract_ee_key() {
     declare countMax=0
     declare outFile=""
     exist_check
-    openssl pkcs12 \
+    $OPENSSL_BIN pkcs12 \
         -in "$inFile" \
         -out "$outFile" \
         -nodes \
@@ -270,7 +273,7 @@ extract_ee_cert(){
     declare countMax=0
     declare outFile=""
     exist_check
-    openssl pkcs12 \
+    $OPENSSL_BIN pkcs12 \
         -in "$inFile" \
         -out "$outFile" \
         -nodes \
@@ -288,7 +291,7 @@ extract_intermediate_chain() {
     declare countMax=0
     declare outFile=""
     exist_check
-    openssl pkcs12 \
+    $OPENSSL_BIN pkcs12 \
         -in "$inFile" \
         -out "$outFile" \
         -nodes \
@@ -315,7 +318,7 @@ split_pem() {
         for cert in *; do
             [[ -e "$cert" ]] || continue
 
-            declare newName=$(openssl x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
+            declare newName=$($OPENSSL_BIN x509 -in "$cert" -noout -subject | awk -F 'CN=' '{print $2}' | awk -F '/' '{print $1}' | sed 's/[* ]/_/g')
 
             declare outFileName="${sslClientPath}/certs/${newName}"
             declare outFileSuffix="${CERT_EXT}"
@@ -354,7 +357,7 @@ install_certs() {
         else
             echo "test mode enabled: skipped 'update-ca-certificates'"
         fi
-    else 
+    else
         echo "error: $PKICTL_CLIENTCERTS_DIR not found. This directory should already exist and be expected by the 'update-ca-certificates' command."
         exit 1
     fi
@@ -368,7 +371,7 @@ exist_check() {
         while [[ -f "${outFileName}.${i}.${outFileSuffix}" ]]; do
             previousFileCounter="$i"
             previousFileName="${outFileName}.${previousFileCounter}"
-            i=$((i + 1)) 
+            i=$((i + 1))
         done
         declare outFileNameCounter="${outFileName}.${i}"
         countMax="$previousFileCounter"
@@ -376,7 +379,7 @@ exist_check() {
         outFile="${outFileNameCounter}.${outFileSuffix}"
     else
         previousFile="/dev/null"
-        outFile="${outFileName}.${outFileSuffix}"        
+        outFile="${outFileName}.${outFileSuffix}"
     fi
 }
 
@@ -390,8 +393,8 @@ dupe_check() {
     while [[ -f "${outFileName}.${counterSuffix}" ]]; do
         case "$outFileSuffix" in
             crt)
-                declare previousFileFingerprint=$(openssl x509 -in "$previousFile" -noout -fingerprint | awk -F '=' '{print $2}')
-                declare outFileFingerprint=$(openssl x509 -in "$outFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                declare previousFileFingerprint=$($OPENSSL_BIN x509 -in "$previousFile" -noout -fingerprint | awk -F '=' '{print $2}')
+                declare outFileFingerprint=$($OPENSSL_BIN x509 -in "$outFile" -noout -fingerprint | awk -F '=' '{print $2}')
                 if [[ "$previousFileFingerprint" == "$outFileFingerprint" ]]; then
                     rm -rf "$outFile"
                     break
@@ -407,7 +410,7 @@ dupe_check() {
                 ;;
         esac
 
-        i=$((i - 1)) 
+        i=$((i - 1))
         counterSuffix="${i}.${outFileSuffix}"
         if [[ "$i" -eq -1 ]]; then
             counterSuffix="${outFileSuffix}"
@@ -479,19 +482,19 @@ rootca() {
 
     case "$action" in
         init)
-            init_ca_folders 
-            init_ca_db 
+            init_ca_folders
+            init_ca_db
             ;;
         request)
-            gen_request 
+            gen_request
             ;;
         sign)
             export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-"root_ca_ext"}
-            sign_root_ca_request 
+            sign_root_ca_request
             ;;
         gencrl)
-            gen_crl 
+            gen_crl
             ;;
         help)
             display_usage_rootca
@@ -519,11 +522,11 @@ subca() {
 
     case "$action" in
         init)
-            init_ca_folders 
-            init_ca_db 
+            init_ca_folders
+            init_ca_db
             ;;
         request)
-            gen_request 
+            gen_request
             ;;
         sign)
             if [[ "$signingCaLabel" == "" ]]; then
@@ -537,10 +540,10 @@ subca() {
             fi
             export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
-            sign_request 
+            sign_request
             ;;
         gencrl)
-            gen_crl 
+            gen_crl
             ;;
         genpem)
             if [[ "$signingCaLabel" == "" ]]; then
@@ -575,7 +578,7 @@ subca() {
             fi
             declare caPath="${PKICTL_CA_DIR}/${caName}"
             echo "Regenerating CRL..."
-            gen_crl 
+            gen_crl
             ;;
         help)
             display_usage_subca
@@ -612,7 +615,7 @@ eecert() {
             eecert_arg_check
             mkdir -p "${caPath}/export"
             declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${requestLabel}.root.ee.conf"
-            gen_request 
+            gen_request
             ;;
         sign)
             eecert_arg_check
@@ -620,7 +623,7 @@ eecert() {
             declare conf="${PKICTL_CONFIG_DIR}/${PKICTL_ORG}-${signingCaLabel}.root.ca.conf"
             export PKICTL_CA_POLICY=${PKICTL_CA_POLICY:-""}
             export PKICTL_CA_EXTENSIONS=${PKICTL_CA_EXTENSIONS:-""}
-            sign_request 
+            sign_request
             ;;
         genpkcs12)
             declare eeName="${outputLabel}"
@@ -635,7 +638,7 @@ eecert() {
             declare caName="${PKICTL_ORG}-${signingCaLabel}.root.ca"
             declare caPath="${PKICTL_CA_DIR}/${caName}"
             echo "Regenerating CRL..."
-            gen_crl 
+            gen_crl
             ;;
         import)
             declare importFileLabel="${requestLabel}"
@@ -761,7 +764,7 @@ EOF
 
 display_usage_eecert() {
     cat <<EOF
-Usage: pkictl eecert <action> 
+Usage: pkictl eecert <action>
                               (<request label>|<end entity label>|<export name>)
                               <signing CA label>
                               [<output label>|<export name>]

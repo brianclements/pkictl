@@ -112,9 +112,30 @@ test_eecert_import(){
     PKICTL_PKCS12_PASS="asdfasdf" "$PKICTL_CMD" eecert import userexportname3
 }
 
+test_openssl_bin(){
+    echo "#######################################"
+    echo "running openssl bin tests"
+    echo ""
+
+    if [ -z ${OPENSSL_BIN+x} ]; then
+        echo "you must specify a different env var OPENSSL_BIN in order to test this"
+        return 1
+    fi
+
+    echo "using openssl version $($OPENSSL_BIN version)"
+    echo ""
+    main rootca
+    main subca
+    main eecert
+    main eecert-import
+}
+
 main() {
     set -eo pipefail
     case "$1" in
+        openssl-bin)
+            test_openssl_bin
+            ;;
         rootca)
             declare PKICTL_TEST_DIR="$PWD/rootca"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
