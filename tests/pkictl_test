@@ -137,6 +137,7 @@ main() {
             cp -r "$PWD/subca" "$PWD/eecert"
             setup
             test_eecert
+            ;;
         eecert-import)
             declare PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
