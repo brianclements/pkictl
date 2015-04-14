@@ -73,19 +73,53 @@ init_import_folders() {
 ## Openssl commands
 ##############################################################################
 
-gen_request() {
-    declare csrName=${eeName:-"$caName"}
-    if [[ "$isEecert" == true ]]; then
+ gen_request() {
+     declare csrName=${eeName:-"$caName"}
+
+     if [[ $PKICTL_CA_ENCRYPT_KEY != "" ]]; then
+        declare encryptKey=" -${PKICTL_CA_ENCRYPT_KEY}"
+     fi
+
+     if [[ "$isEecert" == true ]]; then
+        declare rsaKeySize=${PKICTL_CA_RSA_KEY_SIZE:-2048}
+        declare eccCurveName=${PKICTL_CA_ECC_CURVE_NAME:-"prime256v1"}
         declare outCsr="${caPath}/export/${csrName}.csr"
-    else
+     else
+        declare rsaKeySize=${PKICTL_CA_RSA_KEY_SIZE:-4096}
+        declare eccCurveName=${PKICTL_CA_ECC_CURVE_NAME:-"secp384r1"}
         declare outCsr="${caPath}/${csrName}.csr"
-    fi
+     fi
+
+     if [[ $PKICTL_CA_ECC = true ]]; then
+        if [[ $PKICTL_CA_ENCRYPT_KEY != "" ]]; then
+            openssl ecparam -genkey \
+                -name "$eccCurveName" | \
+            openssl ec -${PKICTL_CA_ENCRYPT_KEY} \
+                -out "${caPath}/private/${csrName}.key"
+        else
+            openssl ecparam -genkey \
+                -name "$eccCurveName" \
+                -out "${caPath}/private/${csrName}.key"
+        fi
+     else
+        if [[ $PKICTL_CA_ENCRYPT_KEY != "" ]]; then
+            openssl genrsa -${PKICTL_CA_ENCRYPT_KEY} \
+                -out ${caPath}/private/${csrName}.key \
+                "$rsaKeySize"
+        else
+            openssl genrsa \
+                -out ${caPath}/private/${csrName}.key \
+                "$rsaKeySize"
+        fi
+     fi
+
+    chmod 700 "${caPath}/private/${csrName}.key"
+
     openssl req -new \
         -config "$conf" \
-        -out "$outCsr" \
-        -keyout "${caPath}/private/${csrName}.key"
-    chmod 700 "${caPath}/private/${csrName}.key"
-}
+        -key "${caPath}/private/${csrName}.key" \
+        -out "$outCsr"
+ }
 
 sign_root_ca_request() {
     declare csrName="$caName"
