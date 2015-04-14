@@ -122,9 +122,43 @@ main() {
             setup
             test_rootca
             ;;
+        rootca-encrypt-key)
+            declare PKICTL_TEST_DIR="$PWD/rootca"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_CA_ENCRYPT_KEY=aes256
+            cleanup
+            setup
+            test_rootca
+            ;;
+        rootca-ecc)
+            declare PKICTL_TEST_DIR="$PWD/rootca"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_CA_ECC=true
+            cleanup
+            setup
+            test_rootca
+            ;;
         subca)
             declare PKICTL_TEST_DIR="$PWD/subca"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            cleanup
+            cp -r "$PWD/rootca" "$PWD/subca"
+            setup
+            test_subca
+            ;;
+        subca-encrypt-key)
+            declare PKICTL_TEST_DIR="$PWD/subca"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_CA_ENCRYPT_KEY=aes256
+            cleanup
+            cp -r "$PWD/rootca" "$PWD/subca"
+            setup
+            test_subca
+            ;;
+        subca-ecc)
+            declare PKICTL_TEST_DIR="$PWD/subca"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_CA_ECC=true
             cleanup
             cp -r "$PWD/rootca" "$PWD/subca"
             setup
@@ -137,6 +171,25 @@ main() {
             cp -r "$PWD/subca" "$PWD/eecert"
             setup
             test_eecert
+            ;;
+        eecert-encrypt-key)
+            declare PKICTL_TEST_DIR="$PWD/eecert"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca/export"
+            export PKICTL_CA_ENCRYPT_KEY=aes256
+            cp -r "$PWD/subca" "$PWD/eecert"
+            setup
+            test_eecert
+            ;;
+        eecert-ecc)
+            declare PKICTL_TEST_DIR="$PWD/eecert"
+            export PKICTL_CA_DIR="$PKICTL_TEST_DIR"
+            export PKICTL_IMPORT_DIR="${PKICTL_TEST_DIR}/${PKICTL_ORG}-email.sub.root.ca/export"
+            export PKICTL_CA_ECC=true
+            cp -r "$PWD/subca" "$PWD/eecert"
+            setup
+            test_eecert
+            ;;
         eecert-import)
             declare PKICTL_TEST_DIR="$PWD/eecert"
             export PKICTL_CA_DIR="$PKICTL_TEST_DIR"

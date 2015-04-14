@@ -161,6 +161,19 @@ that which is already setup via configuration files. To use:
           alternate distinguished name matching policies for signing your
           certificate. When unset, defaults from your configuration file are
           used.
+        * `$PKICTL_CA_ENCRYPT_KEY`: whether to encrypt the generated private key
+          or not. When set, a valid algorithm is expected (e.g., `3des`, `aes256`,
+          etc.).
+        * `$PKICTL_CA_RSA_KEY_SIZE`: by default, RSA is used to generate new
+          certificates. However, to protect private keys with more secure algorithms
+          a specific OpenSSL command has to be ran which does not support reading
+          the RSA key size from the configuration file. The default value is `4096`,
+          but may be changed using this variable.
+        * `$PKICTL_CA_ECC`: whether Elliptic Curve Cryptography should be used
+          to generate certificates or not. The curve name cannot be specified
+          using a configuration file, so the default curve for non CA certificates
+          is `secp384r1` while `prime256v1` is used for end-entity certificates.
+          The curve name can be changed by setting `$PKICTL_CA_ECC_CURVE_NAME`.
     * PKCS#12 Import Settings
         * `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides
           with where your operating system's OpenSSL installation stores its
