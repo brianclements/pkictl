@@ -161,6 +161,8 @@ that which is already setup via configuration files. To use:
           alternate distinguished name matching policies for signing your
           certificate. When unset, defaults from your configuration file are
           used.
+        * `PKICTL_CA_DAYS`: set this prior to signing commands to override the
+          number of days to certify a certificate for as set on the config file.
     * PKCS#12 Import Settings
         * `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides
           with where your operating system's OpenSSL installation stores its

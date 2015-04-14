@@ -94,26 +94,30 @@ sign_root_ca_request() {
         openssl ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
-            -out "${caPath}/${outName}.crt"
+            -out "${caPath}/${outName}.crt" \
+            -days "$PKICTL_CA_DAYS"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
-            -extensions "$PKICTL_CA_EXTENSIONS"
+            -extensions "$PKICTL_CA_EXTENSIONS" \
+            -days "$PKICTL_CA_DAYS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
         openssl ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
-            -policy "$PKICTL_CA_POLICY"
+            -policy "$PKICTL_CA_POLICY" \
+            -days "$PKICTL_CA_DAYS"
     else
         openssl ca -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -policy "$PKICTL_CA_POLICY" \
-            -extensions "$PKICTL_CA_EXTENSIONS"
+            -extensions "$PKICTL_CA_EXTENSIONS" \
+            -days "$PKICTL_CA_DAYS"
     fi
 
     if [[ "$?" -eq 0 ]]; then
@@ -135,26 +139,30 @@ sign_request() {
         openssl ca \
             -config "$conf" \
             -in "$inCsr" \
-            -out "$outCrt"
+            -out "$outCrt" \
+            -days "$PKICTL_CA_DAYS"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
         openssl ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
-            -extensions "$PKICTL_CA_EXTENSIONS"
+            -extensions "$PKICTL_CA_EXTENSIONS" \
+            -days "$PKICTL_CA_DAYS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
         openssl ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
-            -policy "$PKICTL_CA_POLICY"
+            -policy "$PKICTL_CA_POLICY" \
+            -days "$PKICTL_CA_DAYS"
     else
         openssl ca \
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY" \
-            -extensions "$PKICTL_CA_EXTENSIONS"
+            -extensions "$PKICTL_CA_EXTENSIONS" \
+            -days "$PKICTL_CA_DAYS"
     fi
 
     if [[ "$?" -eq 0 ]]; then
