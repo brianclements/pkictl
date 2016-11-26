@@ -55,7 +55,7 @@ init_ca_db() {
     cp /dev/null "${caPath}/db/${caName}.db"
     cp /dev/null "${caPath}/db/${caName}.db.attr"
     echo 01 > "${caPath}/db/${caName}.crt.srl"
-    echo 01 > "${caPath}/db/${caName}.crl.srl"
+    openssl rand -hex 16 > "${caPath}/db/${caName}.crl.srl"
 }
 
 init_import_folders() {
