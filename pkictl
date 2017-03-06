@@ -8,6 +8,17 @@
 ##Requirements: openssl
 ##----------------
 
+# Load configuration files
+if [[ -f $PWD/pkictl.conf ]]; then
+  source $PWD/pkictl.conf
+elif [[ -f $XDG_CONFIG_HOME/pkictl.conf ]]; then
+  source $XDG_CONFIG_HOME/pkictl.conf
+elif [[ -f $HOME/.pkictl.conf ]]; then
+  source $HOME/.pkictl.conf
+elif [[ -f /etc/pkictl/pkictl.conf ]]; then
+  source /etc/pkictl/pkictl.conf
+fi
+
 # Binary settings
 export OPENSSL_BIN=${OPENSSL_BIN:-"openssl"}
 
@@ -15,12 +26,13 @@ export OPENSSL_BIN=${OPENSSL_BIN:-"openssl"}
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used in *.conf files
 
 # Script settings
-export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD}
-export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD}
+export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD/config}
+export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD/certs}
 export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
 export PKICTL_CLIENTCERTS_DIR=${PKICTL_CLIENTCERTS_DIR:-/etc/ssl/certs}
-export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
+export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD/import}
 export PKICTL_SAFE_TEST=${PKICTL_SAFE_TEST:-"false"}
+export PKICTL_BATCH=${PKICTL_BATCH:-"false"}
 
 # OS settings
 export PKICTL_UPDATE_CERTS_CMD=$(command -v update-ca-certificates)
@@ -83,7 +95,10 @@ gen_request() {
     else
         declare outCsr="${caPath}/${csrName}.csr"
     fi
-    $OPENSSL_BIN req -new \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN req -new ${opensslOpt}\
         -config "$conf" \
         -out "$outCsr" \
         -keyout "${caPath}/private/${csrName}.key"
@@ -93,25 +108,30 @@ gen_request() {
 sign_root_ca_request() {
     declare csrName="$caName"
     declare outName="$caName"
+
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
@@ -134,25 +154,28 @@ sign_request() {
         declare inCsr="${caPath}/${csrName}.csr"
         declare outCrt="${caPath}/${outName}.crt"
     fi
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
@@ -166,7 +189,10 @@ sign_request() {
 }
 
 gen_crl() {
-    $OPENSSL_BIN ca -gencrl \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN ca -gencrl ${opensslOpt}\
         -config "$conf" \
         -out "${caPath}/crl/${caName}.crl"
 }
@@ -200,7 +226,10 @@ revoke_cert() {
     else
         declare revokeCrt="${caPath}/${revokeName}.crt"
     fi
-    $OPENSSL_BIN ca \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN ca ${opensslOpt}\
         -config "$conf" \
         -revoke "$revokeCrt" \
         -crl_reason "$PKICTL_CRL_REASON"
@@ -670,7 +699,7 @@ eecert() {
 
 display_usage_main() {
     cat <<EOF
-Usage: pkictl <subcommand> <action> <action args>
+Usage: pkictl [<organisation>] <subcommand> <action> <action args>
 
 Pkictl is a biased Public Key Infrastructure (PKI) management helper tool.
 It's designed to make certificate, key creation, and management tasks formal,
@@ -678,7 +707,10 @@ easy to initiate, and easy to automate. The complexities of the openssl
 settings are to be absorbed by the various openssl.conf files, saving only
 execution of the tasks for the script itself.
 
-Subcommands:    Actions:
+Subcommands:    Actions/Comments:
+    [<organisation>]
+                Define the orgnisation to work with.
+
     rootca
                 (init|request|sign|gencrl|help)
 
@@ -700,7 +732,7 @@ EOF
 
 display_usage_rootca() {
     cat <<EOF
-Usage: pkictl rootca <action>
+Usage: pkictl [<organisation>] rootca <action>
 
 Create a root private key, CSR, and self sign to make a root CA.
 
@@ -722,7 +754,7 @@ EOF
 
 display_usage_subca() {
     cat <<EOF
-Usage: pkictl subca <action> <subca label> [<signing CA label>]
+Usage: pkictl [<organisation>] subca <action> <subca label> [<signing CA label>]
 
 Create a subordinate private key, CSR, certificate, and CRL named <subca label>
 and sign it with senior CA named <signing CA label>. Optionally, revoke issued
@@ -764,7 +796,7 @@ EOF
 
 display_usage_eecert() {
     cat <<EOF
-Usage: pkictl eecert <action>
+Usage: pkictl [<organisation>] eecert <action>
                               (<request label>|<end entity label>|<export name>)
                               <signing CA label>
                               [<output label>|<export name>]
@@ -829,6 +861,16 @@ EOF
 
 main() {
     set -eo pipefail
+    
+    # Check if first argument is an existing organisation
+    if ls ${PKICTL_CONFIG_DIR}/$1-* 1> /dev/null 2>&1 ; then
+      export PKICTL_ORG=$1
+      shift 1
+    fi
+
+    # Check action
+    declare opensslOpt=""
+
     case "$1" in
         rootca)
             declare action="$2"
@@ -846,7 +888,12 @@ main() {
             display_usage_main
             ;;
         *)
-            echo "argument error: missing or incorrect subcommand."
+            if [[ -z $1 ]] ; then
+              message=""
+            else
+              message=": '$1'"
+            fi
+            echo "argument error: missing or incorrect subcommand${message}"
             echo ""
             display_usage_main
             ;;
@@ -857,3 +904,5 @@ main() {
 ## Runtime
 ##############################################################################
 main "$@"
+
+# vim: tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab :
