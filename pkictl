@@ -21,6 +21,7 @@ export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
 export PKICTL_CLIENTCERTS_DIR=${PKICTL_CLIENTCERTS_DIR:-/etc/ssl/certs}
 export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
 export PKICTL_SAFE_TEST=${PKICTL_SAFE_TEST:-"false"}
+export PKICTL_BATCH=${PKICTL_BATCH:-"false"}
 
 # OS settings
 export PKICTL_UPDATE_CERTS_CMD=$(command -v update-ca-certificates)
@@ -83,7 +84,10 @@ gen_request() {
     else
         declare outCsr="${caPath}/${csrName}.csr"
     fi
-    $OPENSSL_BIN req -new \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN req -new ${opensslOpt}\
         -config "$conf" \
         -out "$outCsr" \
         -keyout "${caPath}/private/${csrName}.key"
@@ -93,25 +97,30 @@ gen_request() {
 sign_root_ca_request() {
     declare csrName="$caName"
     declare outName="$caName"
+
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        $OPENSSL_BIN ca -selfsign \
+        $OPENSSL_BIN ca ${opensslOpt} -selfsign \
             -config "$conf" \
             -in "${caPath}/${csrName}.csr" \
             -out "${caPath}/${outName}.crt" \
@@ -134,25 +143,28 @@ sign_request() {
         declare inCsr="${caPath}/${csrName}.csr"
         declare outCrt="${caPath}/${outName}.crt"
     fi
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
     if [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt"
     elif [[ "$PKICTL_CA_EXTENSIONS" != "" ]] && [[ "$PKICTL_CA_POLICY" == "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -extensions "$PKICTL_CA_EXTENSIONS"
     elif [[ "$PKICTL_CA_EXTENSIONS" == "" ]] && [[ "$PKICTL_CA_POLICY" != "" ]]; then
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
             -policy "$PKICTL_CA_POLICY"
     else
-        $OPENSSL_BIN ca \
+        $OPENSSL_BIN ca ${opensslOpt}\
             -config "$conf" \
             -in "$inCsr" \
             -out "$outCrt" \
@@ -166,7 +178,10 @@ sign_request() {
 }
 
 gen_crl() {
-    $OPENSSL_BIN ca -gencrl \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN ca -gencrl ${opensslOpt}\
         -config "$conf" \
         -out "${caPath}/crl/${caName}.crl"
 }
@@ -200,7 +215,10 @@ revoke_cert() {
     else
         declare revokeCrt="${caPath}/${revokeName}.crt"
     fi
-    $OPENSSL_BIN ca \
+    if [[ "$PKICTL_BATCH" == "true" ]]; then
+      opensslOpt="-batch ${opensslOpt}"
+    fi
+    $OPENSSL_BIN ca ${opensslOpt}\
         -config "$conf" \
         -revoke "$revokeCrt" \
         -crl_reason "$PKICTL_CRL_REASON"
@@ -829,6 +847,9 @@ EOF
 
 main() {
     set -eo pipefail
+
+    declare opensslOpt=""
+
     case "$1" in
         rootca)
             declare action="$2"
@@ -857,3 +878,5 @@ main() {
 ## Runtime
 ##############################################################################
 main "$@"
+
+# vim: tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab :
