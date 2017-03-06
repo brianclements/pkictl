@@ -670,7 +670,7 @@ eecert() {
 
 display_usage_main() {
     cat <<EOF
-Usage: pkictl <subcommand> <action> <action args>
+Usage: pkictl [<organisation>] <subcommand> <action> <action args>
 
 Pkictl is a biased Public Key Infrastructure (PKI) management helper tool.
 It's designed to make certificate, key creation, and management tasks formal,
@@ -678,7 +678,10 @@ easy to initiate, and easy to automate. The complexities of the openssl
 settings are to be absorbed by the various openssl.conf files, saving only
 execution of the tasks for the script itself.
 
-Subcommands:    Actions:
+Subcommands:    Actions/Comments:
+    [<organisation>]
+                Define the orgnisation to work with.
+
     rootca
                 (init|request|sign|gencrl|help)
 
@@ -700,7 +703,7 @@ EOF
 
 display_usage_rootca() {
     cat <<EOF
-Usage: pkictl rootca <action>
+Usage: pkictl [<organisation>] rootca <action>
 
 Create a root private key, CSR, and self sign to make a root CA.
 
@@ -722,7 +725,7 @@ EOF
 
 display_usage_subca() {
     cat <<EOF
-Usage: pkictl subca <action> <subca label> [<signing CA label>]
+Usage: pkictl [<organisation>] subca <action> <subca label> [<signing CA label>]
 
 Create a subordinate private key, CSR, certificate, and CRL named <subca label>
 and sign it with senior CA named <signing CA label>. Optionally, revoke issued
@@ -764,7 +767,7 @@ EOF
 
 display_usage_eecert() {
     cat <<EOF
-Usage: pkictl eecert <action>
+Usage: pkictl [<organisation>] eecert <action>
                               (<request label>|<end entity label>|<export name>)
                               <signing CA label>
                               [<output label>|<export name>]
@@ -829,6 +832,14 @@ EOF
 
 main() {
     set -eo pipefail
+
+    # Check if first argument is an existing organisation
+    if ls ${PKICTL_CONFIG_DIR}/$1-* 1> /dev/null 2>&1 ; then
+      export PKICTL_ORG=$1
+      shift 1
+    fi
+
+    # Check action
     case "$1" in
         rootca)
             declare action="$2"
@@ -846,7 +857,12 @@ main() {
             display_usage_main
             ;;
         *)
-            echo "argument error: missing or incorrect subcommand."
+            if [[ -z $1 ]] ; then
+              message=""
+            else
+              message=": '$1'"
+            fi
+            echo "argument error: missing or incorrect subcommand${message}"
             echo ""
             display_usage_main
             ;;
@@ -857,3 +873,6 @@ main() {
 ## Runtime
 ##############################################################################
 main "$@"
+
+
+# vim: tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab :
