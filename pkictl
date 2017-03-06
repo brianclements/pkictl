@@ -15,11 +15,11 @@ export OPENSSL_BIN=${OPENSSL_BIN:-"openssl"}
 export PKICTL_ORG=${PKICTL_ORG:-"myorg.local"}  # Same as organizationName used in *.conf files
 
 # Script settings
-export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD}
-export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD}
+export PKICTL_CONFIG_DIR=${PKICTL_CONFIG_DIR:-$PWD/config}
+export PKICTL_CA_DIR=${PKICTL_CA_DIR:-$PWD/certs}
 export PKICTL_SSL_DIR=${PKICTL_SSL_DIR:-/etc/ssl}
 export PKICTL_CLIENTCERTS_DIR=${PKICTL_CLIENTCERTS_DIR:-/etc/ssl/certs}
-export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD}
+export PKICTL_IMPORT_DIR=${PKICTL_IMPORT_DIR:-$PWD/import}
 export PKICTL_SAFE_TEST=${PKICTL_SAFE_TEST:-"false"}
 
 # OS settings
