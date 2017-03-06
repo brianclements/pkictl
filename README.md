@@ -194,13 +194,15 @@ that which is already setup via configuration files. To use:
 ## Usage
 
 The subcommands are grouped into 3 categories: `rootca`, `subca`, and `eecert`.
-Below are real examples using the provided configuration files.
+Below are real examples using the provided configuration files. You can also 
+provide an optional organisation name before each of these subcommands, it
+has the same behavior as setting the `$PKICTL_ORG` environment variable.
 
 ### Rootca
 
 Setup a typical self-signed root certificate:
 
->`Usage: pkictl rootca <action>`
+>`Usage: pkictl [<environment>] rootca <action>`
 
 * `pkictl rootca init`
 * `pkictl rootca request`
@@ -213,7 +215,7 @@ Setup and manage the intermediate certificates from the first sub-root
 certificate, all the way to the issuing/signing certificates at the very bottom
 of the PKI hierarchy:
 
->`Usage: pkictl subca <action> <subca label> [<signing CA label>]`
+>`Usage: pkictl [<environment>] subca <action> <subca label> [<signing CA label>]`
 
 * `pkictl subca init sub`
 * `pkictl subca request sub`
@@ -227,7 +229,7 @@ of the PKI hierarchy:
 Issue and import end-entity certificates from the issuing/signing certificates at the
 bottom of the PKI hierarchy.
 
->`Usage: pkictl eecert <action> (<request label>|<end entity label>|<export name>) <signing CA label> [<output label>|<export name>]`
+>`Usage: pkictl [<environment>] eecert <action> (<request label>|<end entity label>|<export name>) <signing CA label> [<output label>|<export name>]`
 
 * `pkictl eecert request node.tls.sub tls.sub somehostname.localnet`
 * `pkictl eecert sign somehostname.localnet tls.sub`
