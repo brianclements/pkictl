@@ -161,6 +161,10 @@ that which is already setup via configuration files. To use:
           alternate distinguished name matching policies for signing your
           certificate. When unset, defaults from your configuration file are
           used.
+        * `$PKICTL_BATCH`: if set to `true`, openssl will not prompt you
+          for questions (like country, email, etc ...) or for validating new
+          certificate requests. Useful when used with scripts of configuration
+          management tools like Ansible.
     * PKCS#12 Import Settings
         * `$PKICTL_SSL_DIR`: defaults to `/etc/ssl`, make sure this coincides
           with where your operating system's OpenSSL installation stores its
