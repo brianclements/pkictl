@@ -146,10 +146,11 @@ that which is already setup via configuration files. To use:
     However, some configuration is welcomed for certain items to allow for
     efficient use of configuration files.
 
-    It is also possible to setup these variables into a configuration file, `pkictl`
-    will automatically look for these file: `pkictl.conf`, `$XDG_CONFIG_HOME/pkictl.conf`,
+    It is also possible to setup these variables into a configuration file via the
+    `$PKICTL_CONF` environment variable. `pkictl` will automatically look for these 
+    file: `$PKICTL_CONF`, `$PWD/pkictl.conf`, `$XDG_CONFIG_HOME/pkictl.conf`,
     `$HOME/.pkictl.conf` and finally `/etc/pkictl/pkictl.conf`. The first file found
-    is taken into acount.
+    is taken into acount, and it will not throw any errors if files are not found.
 
     * CA Settings
         * `$PKICTL_ORG`: This sets "myorg.local" in the above examples. Must be
