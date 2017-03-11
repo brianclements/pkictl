@@ -8,6 +8,19 @@
 ##Requirements: openssl
 ##----------------
 
+# Load configuration files
+if [[ -f ${PKICTL_CONF} ]]; then
+  source ${PKICTL_CONF}
+elif [[ -f ${PWD}/pkictl.conf ]]; then
+  source ${PWD}/pkictl.conf
+elif [[ -f ${XDG_CONFIG_HOME}/pkictl.conf ]]; then
+  source ${XDG_CONFIG_HOME}/pkictl.conf
+elif [[ -f ${HOME}/.pkictl.conf ]]; then
+  source ${HOME}/.pkictl.conf
+elif [[ -f /etc/pkictl/pkictl.conf ]]; then
+  source /etc/pkictl/pkictl.conf
+fi
+
 # Binary settings
 export OPENSSL_BIN=${OPENSSL_BIN:-"openssl"}
 
